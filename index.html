@@ -352,7 +352,17 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
       <div id="settingsKeyStatus" style="font-size:11px;color:#6b84a8;margin-bottom:16px;min-height:16px;"></div>
       <div style="display:flex;gap:8px;">
         <button onclick="closeSettingsModal()" style="flex:1;padding:10px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;font-size:13px;font-weight:600;cursor:pointer;color:#344f73;">Cancelar</button>
-        <button onclick="saveSettingsKey()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#1a56db;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>
+        <button onclick="saveSettingsKey()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#1a56db;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar Anthropic Key</button>
+      </div>
+      <div style="border-top:1px solid #e2e8f4;padding-top:14px;margin-top:14px;">
+        <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:4px;">Financial Modeling Prep Key <span style="font-size:10px;font-weight:400;color:#6b84a8;">(opcional — confirmação)</span></div>
+        <div style="font-size:11px;color:#6b84a8;margin-bottom:8px;">Gratuito em <a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="color:#1a56db;">financialmodelingprep.com</a> — 25 chamadas/dia, geridas automaticamente pela app.</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="settingsFmpInput" type="password" placeholder="chave FMP..." style="flex:1;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:13px;outline:none;font-family:Inter,sans-serif;"/>
+          <button onclick="var i=document.getElementById('settingsFmpInput');i.type=i.type==='password'?'text':'password'" style="padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;cursor:pointer;">👁</button>
+        </div>
+        <div id="settingsFmpStatus" style="font-size:11px;color:#6b84a8;margin-bottom:8px;min-height:14px;"></div>
+        <button onclick="saveSettingsFmp()" style="width:100%;padding:10px;border:none;border-radius:8px;background:#0891b2;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar FMP Key</button>
       </div>
     </div>
 
@@ -416,7 +426,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
   <div id="nextScanTime" style="font-size:11px;color:var(--muted);text-align:right;"></div>
   <button onclick="loadDashboard()" style="background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:9px;padding:9px 14px;font-size:11px;font-weight:600;cursor:pointer;">Índices</button>
   <button onclick="startScan()" id="dashScanBtnTop" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">▶ Analisar Agora</button>
-</div></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 50</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- SCAN PROGRESS (inline) -->
+</div></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 50</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- FMP STATUS --><div id="fmpStatusBar" style="display:none;align-items:center;gap:8px;padding:6px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;margin-bottom:12px;"></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- SCAN PROGRESS (inline) -->
 <div id="scanProgressPanel" style="display:none;background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:20px;">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
     <div class="spin"></div>
@@ -632,6 +642,14 @@ function openSettingsModal(){
   var current = getKey();
   if(current){ input.value = current; status.textContent = '✓ API Key configurada (' + current.length + ' caracteres)'; status.style.color='#16a34a'; }
   else { input.value = ''; status.textContent = 'Sem key configurada — a app não funciona sem ela.'; status.style.color='#dc2626'; }
+  var fmpInput = document.getElementById('settingsFmpInput');
+  var fmpStatus = document.getElementById('settingsFmpStatus');
+  var fmpKey = getFmpKey();
+  if(fmpInput) fmpInput.value = fmpKey||'';
+  if(fmpStatus){
+    if(fmpKey){ fmpStatus.textContent = '✓ FMP Key configurada · '+fmpCallsToday()+'/'+FMP_DAILY_LIMIT+' chamadas hoje'; fmpStatus.style.color='#16a34a'; }
+    else { fmpStatus.textContent = 'Sem FMP Key — confirmação de dados desativada.'; fmpStatus.style.color='#6b84a8'; }
+  }
   switchSettingsTab('api');
   document.getElementById('settingsModal').style.display = 'flex';
 }
@@ -650,8 +668,187 @@ async function saveSettingsKey(){
   LS.s(K.key, k);
   var ok = await window.DB.save(K.key, k);
   if(ok){ status.textContent = '✓ Guardada com sucesso!'; status.style.color='#16a34a'; }
-  else { status.textContent = '✓ Guardada localmente (Firebase indisponível).'; status.style.color='#d97706'; }
+  else { status.textContent = '✓ Guardada localmente.'; status.style.color='#d97706'; }
   setTimeout(function(){ closeSettingsModal(); initDashboard(); }, 1200);
+}
+
+async function saveSettingsFmp(){
+  var k = document.getElementById('settingsFmpInput').value.trim();
+  var status = document.getElementById('settingsFmpStatus');
+  if(!k){ status.textContent = 'Introduz uma key válida.'; status.style.color='#dc2626'; return; }
+  status.textContent = 'A guardar...'; status.style.color='#6b84a8';
+  LS.s('bfa_fmp_key', k);
+  var ok = window.DB ? await window.DB.save('bfa_fmp_key', k) : false;
+  if(ok){ status.textContent = '✓ FMP Key guardada!'; status.style.color='#16a34a'; }
+  else { status.textContent = '✓ Guardada localmente.'; status.style.color='#d97706'; }
+}
+
+function getFmpKey(){ return LS.g('bfa_fmp_key')||''; }
+
+// ── FMP ROTATION MANAGER ──
+// Tracks which tickers were last fetched from FMP and when
+// Ensures max 25 calls/day and no repeats on consecutive days
+var FMP_DAILY_LIMIT = 25;
+
+function getFmpLog(){
+  return LS.g('bfa_fmp_log') || {}; // {TICKER: 'YYYY-MM-DD'}
+}
+function saveFmpLog(log){ LS.s('bfa_fmp_log', log); }
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function yesterdayStr(){
+  var d = new Date(); d.setDate(d.getDate()-1);
+  return d.toISOString().slice(0,10);
+}
+
+function fmpCallsToday(){
+  var log = getFmpLog();
+  var today = todayStr();
+  return Object.values(log).filter(function(d){ return d === today; }).length;
+}
+
+// Pick which tickers to fetch today (not fetched yesterday or today, ordered by rank)
+function pickFmpTickers(rankedTickers){
+  var log = getFmpLog();
+  var today = todayStr();
+  var yesterday = yesterdayStr();
+  var usedToday = fmpCallsToday();
+  var remaining = FMP_DAILY_LIMIT - usedToday;
+  if(remaining <= 0) return [];
+
+  // Exclude tickers fetched today or yesterday
+  var eligible = rankedTickers.filter(function(t){
+    var last = log[t];
+    return !last || (last !== today && last !== yesterday);
+  });
+
+  // Sort by oldest fetch first (null = never = highest priority)
+  eligible.sort(function(a,b){
+    var la = log[a]||'0000-00-00';
+    var lb = log[b]||'0000-00-00';
+    return la < lb ? -1 : la > lb ? 1 : 0;
+  });
+
+  return eligible.slice(0, remaining);
+}
+
+async function fetchFmpFundamentals(ticker){
+  var key = getFmpKey();
+  if(!key) return null;
+  var yTicker = ticker.replace(/\.US$/,'');
+  try{
+    // Fetch key metrics + ratios in 2 calls
+    var baseUrl = 'https://financialmodelingprep.com/api/v3';
+    var [metricsRes, ratiosRes] = await Promise.all([
+      yahooFetch(baseUrl+'/key-metrics/'+yTicker+'?period=annual&limit=5&apikey='+key),
+      yahooFetch(baseUrl+'/ratios/'+yTicker+'?period=annual&limit=5&apikey='+key)
+    ]);
+
+    var metrics = Array.isArray(metricsRes) ? metricsRes : [];
+    var ratios  = Array.isArray(ratiosRes)  ? ratiosRes  : [];
+
+    if(!metrics.length) return null;
+
+    // Latest year
+    var m0 = metrics[0]||{};
+    var r0 = ratios[0]||{};
+
+    // 5yr averages
+    function avg(arr, field){
+      var vals = arr.map(function(x){return x[field];}).filter(function(v){return v!=null&&!isNaN(v);});
+      return vals.length ? vals.reduce(function(a,b){return a+b;},0)/vals.length : null;
+    }
+
+    // ROIC = NOPAT / Invested Capital (key metric from FMP)
+    var roicHistory = metrics.map(function(m){return m.roic;}).filter(function(v){return v!=null;});
+    var roicAvg5 = roicHistory.length ? avg(metrics,'roic') : null;
+
+    // Update FMP log
+    var log = getFmpLog();
+    log[ticker] = todayStr();
+    saveFmpLog(log);
+
+    return {
+      // Current
+      roic:           m0.roic,
+      evToFCF:        m0.evToFreeCashFlow,
+      debtToEquity:   m0.debtToEquity,
+      currentRatio:   m0.currentRatio,
+      roe:            m0.roe,
+      roa:            m0.roa,
+      grossMargin:    r0.grossProfitMargin,
+      netMargin:      r0.netProfitMargin,
+      pe:             r0.priceEarningsRatio,
+      priceToFCF:     r0.priceToFreeCashFlowsRatio,
+      dividendYield:  r0.dividendYield,
+      // 5yr averages
+      roicAvg5:       roicAvg5,
+      roeAvg5:        avg(metrics,'roe'),
+      netMarginAvg5:  avg(ratios,'netProfitMargin'),
+      grossMarginAvg5:avg(ratios,'grossProfitMargin'),
+      // Raw history
+      roicHistory:    roicHistory,
+      source: 'FMP'
+    };
+  }catch(e){
+    console.warn('FMP failed for '+ticker+':', e.message);
+    return null;
+  }
+}
+
+// Run FMP batch for today's quota on scan results
+async function runFmpBatch(){
+  if(!getFmpKey()) return;
+  if(!scanResults.length) return;
+
+  var tickers = scanResults.map(function(r){return r.ticker;});
+  var toFetch = pickFmpTickers(tickers);
+  if(!toFetch.length){
+    console.log('FMP: no tickers eligible today (limit reached or all fetched recently)');
+    return;
+  }
+
+  console.log('FMP batch: fetching', toFetch.length, 'tickers today:', toFetch.join(','));
+
+  for(var i=0; i<toFetch.length; i++){
+    var ticker = toFetch[i];
+    var fmpData = await fetchFmpFundamentals(ticker);
+    if(!fmpData) continue;
+
+    // Find in scanResults and merge
+    var idx = scanResults.findIndex(function(r){return r.ticker===ticker;});
+    if(idx===-1) continue;
+    var r = scanResults[idx];
+
+    // FMP confirmation — override Yahoo with FMP where FMP is more reliable
+    if(fmpData.roicAvg5!=null) r.roic_avg5 = fmpData.roicAvg5;
+    if(fmpData.roeAvg5!=null)  r.roe = fmpData.roeAvg5 * 100;
+    if(fmpData.netMarginAvg5!=null) r.net_margin = fmpData.netMarginAvg5 * 100;
+    if(fmpData.grossMarginAvg5!=null) r.gross_margin_avg5 = fmpData.grossMarginAvg5 * 100;
+    if(fmpData.roic!=null) r.roic = fmpData.roic * 100;
+    r.fmp = fmpData;
+
+    // Small delay to be respectful to FMP API
+    if(i < toFetch.length-1) await new Promise(function(res){setTimeout(res,400);});
+  }
+
+  // Save updated scan results
+  if(lastScan){ lastScan.results = scanResults; LS.s(K.scan, lastScan); if(window.DB) window.DB.save(K.scan, lastScan); }
+  renderTopTable();
+  updateFmpStatus();
+  console.log('FMP batch complete. Used today:', fmpCallsToday(), '/', FMP_DAILY_LIMIT);
+}
+
+function updateFmpStatus(){
+  var el = document.getElementById('fmpStatusBar');
+  if(!el) return;
+  if(!getFmpKey()){ el.style.display='none'; return; }
+  var used = fmpCallsToday();
+  var log = getFmpLog();
+  var today = todayStr();
+  var fetched = Object.keys(log).filter(function(t){return log[t]===today;});
+  el.style.display='flex';
+  el.innerHTML = '<span style="font-size:10px;color:var(--muted);">FMP hoje: <strong>'+used+'/'+FMP_DAILY_LIMIT+'</strong> chamadas · '+fetched.join(', ')+'</span>';
 }
 
 // ── TABS ──
@@ -955,6 +1152,9 @@ async function startScan(){
     renderScanResults();
     updateQuickStats();renderTopTable();refreshDashboardCharts();
     // prices already enriched inline in analyzeOne
+    // Run FMP batch for today's quota
+    setTimeout(runFmpBatch, 2000);
+    setTimeout(updateFmpStatus, 2500);
   }catch(e){
     var er=document.getElementById('scanErr');
     if(er){er.style.display='block';er.textContent='Erro: '+e.message;}
@@ -1734,9 +1934,11 @@ async function initApp(){
         window.DB.load(K.port),
         window.DB.load(K.scan),
         window.DB.load('bfa_method'),
-        window.DB.load('bfa_extra_tickers')
+        window.DB.load('bfa_extra_tickers'),
+        window.DB.load('bfa_fmp_key'),
+        window.DB.load('bfa_fmp_log')
       ]);
-      var fbKey=results[0], fbPort=results[1], fbScan=results[2], fbMethod=results[3], fbExtraTickers=results[4];
+      var fbKey=results[0], fbPort=results[1], fbScan=results[2], fbMethod=results[3], fbExtraTickers=results[4], fbFmpKey=results[5], fbFmpLog=results[6];
 
       if(fbKey){
         var keyStr=typeof fbKey==='string'?fbKey:JSON.stringify(fbKey);
@@ -1757,6 +1959,8 @@ async function initApp(){
       }
       if(fbMethod){ localStorage.setItem('bfa_method', JSON.stringify(fbMethod)); }
       if(fbExtraTickers&&Array.isArray(fbExtraTickers)){ localStorage.setItem('bfa_extra_tickers', JSON.stringify(fbExtraTickers)); }
+      if(fbFmpKey){ localStorage.setItem('bfa_fmp_key', JSON.stringify(fbFmpKey)); }
+      if(fbFmpLog){ localStorage.setItem('bfa_fmp_log', JSON.stringify(fbFmpLog)); }
     }catch(e){
       console.error('Firebase load error:', e.message);
     }
@@ -1781,6 +1985,9 @@ async function initApp(){
   scheduleNextScan();
   updateNextScanDisplay();
   setInterval(updateNextScanDisplay, 60000);
+  updateFmpStatus();
+  // Run FMP batch if we have scan results and FMP key
+  if(scanResults.length && getFmpKey()) setTimeout(runFmpBatch, 3000);
   // Auto-scan scheduled at 09:00 via scheduleNextScan timer
 }
 
