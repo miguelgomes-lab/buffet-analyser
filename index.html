@@ -317,6 +317,11 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
     <div style="font-size:11px;color:#a0b0c8;line-height:1.6;">Os teus dados ficam guardados em segurança<br>e sincronizados em todos os dispositivos.</div>
   </div>
 </div>
+<!-- LOADING AUTH (redirect return) -->
+<div id="loadingAuth" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0d1b2e 0%,#1a3060 50%,#0d1b2e 100%);flex-direction:column;gap:16px;font-family:Inter,system-ui,sans-serif;">
+  <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div>
+  <div style="font-size:14px;font-weight:600;color:#fff;">A autenticar...</div>
+</div>
 <!-- APP ROOT -->
 <div id="appRoot" style="display:none;">
 
@@ -372,55 +377,73 @@ window.AUTH = {
   async loginGoogle(){
     const provider = new GoogleAuthProvider();
     try{
-      if(isMobile){ await signInWithRedirect(auth, provider); }
-      else{ await signInWithPopup(auth, provider); }
+      if(isMobile){
+        sessionStorage.setItem('bfa_redirect_pending','1');
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
     }
-    catch(e){ console.error('Google login error:', e.message); alert('Erro ao entrar com Google: ' + e.message); }
+    catch(e){ sessionStorage.removeItem('bfa_redirect_pending'); console.error('Google login error:', e.message); alert('Erro ao entrar com Google: ' + e.message); }
   },
   async loginApple(){
     const provider = new OAuthProvider('apple.com');
     provider.addScope('name');
     provider.addScope('email');
     try{
-      if(isMobile){ await signInWithRedirect(auth, provider); }
-      else{ await signInWithPopup(auth, provider); }
+      if(isMobile){
+        sessionStorage.setItem('bfa_redirect_pending','1');
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
     }
-    catch(e){ console.error('Apple login error:', e.message); alert('Erro ao entrar com Apple: ' + e.message); }
+    catch(e){ sessionStorage.removeItem('bfa_redirect_pending'); console.error('Apple login error:', e.message); alert('Erro ao entrar com Apple: ' + e.message); }
   },
   async logout(){
     await signOut(auth);
   }
 };
 
-// Handle redirect result FIRST, then listen for auth state
-async function initAuth(){
-  // Show neutral loading state while we figure out auth
+function showUser(user){
+  window._authUser = user;
   document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appRoot').style.display = 'none';
+  document.getElementById('loadingAuth').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'block';
+  var uname = document.getElementById('navUserName');
+  var uavatar = document.getElementById('navUserAvatar');
+  if(uname) uname.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email || 'Utilizador';
+  if(uavatar){
+    if(user.photoURL){ uavatar.innerHTML='<img src="'+user.photoURL+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover"/>'; }
+    else{ uavatar.textContent = (user.displayName||user.email||'U')[0].toUpperCase(); }
+  }
+  if(window._appReady){ window.initApp(); } else { window._pendingInit = true; }
+}
 
-  try{
-    const result = await getRedirectResult(auth);
-    if(result){ console.log('Redirect login OK:', result.user.uid); }
-  }catch(e){
-    console.error('Redirect result error:', e.message);
-    // Error from redirect - show login screen
-    document.getElementById('loginScreen').style.display = 'flex';
-    return;
+async function initAuth(){
+  const pending = sessionStorage.getItem('bfa_redirect_pending');
+
+  if(pending){
+    // Coming back from redirect — show loading, not login
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('loadingAuth').style.display = 'flex';
+    sessionStorage.removeItem('bfa_redirect_pending');
+    try{
+      const result = await getRedirectResult(auth);
+      if(result && result.user){
+        showUser(result.user);
+        return;
+      }
+    }catch(e){
+      console.error('Redirect result error:', e.message);
+    }
   }
 
+  // Normal auth state listener
   onAuthStateChanged(auth, function(user){
+    document.getElementById('loadingAuth').style.display = 'none';
     if(user){
-      window._authUser = user;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appRoot').style.display = 'block';
-      var uname = document.getElementById('navUserName');
-      var uavatar = document.getElementById('navUserAvatar');
-      if(uname) uname.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email || 'Utilizador';
-      if(uavatar){
-        if(user.photoURL){ uavatar.innerHTML='<img src="'+user.photoURL+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover"/>'; }
-        else{ uavatar.textContent = (user.displayName||user.email||'U')[0].toUpperCase(); }
-      }
-      if(window._appReady){ window.initApp(); } else { window._pendingInit = true; }
+      showUser(user);
     } else {
       window._authUser = null;
       document.getElementById('loginScreen').style.display = 'flex';
