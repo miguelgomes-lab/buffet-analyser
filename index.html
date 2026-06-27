@@ -325,7 +325,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 <!-- APP ROOT -->
 <div id="appRoot" style="display:none;">
 
-<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Claude AI</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" onclick="openSettingsModal()" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Definições"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;" onclick="openSettingsModal()"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- API Key modal removed - key stored in Firestore -->
+<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Claude AI</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" onclick="openSettingsModal()" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Definições"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;" onclick="openSettingsModal()"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- API Key modal removed - key stored in Firestore -->
 <!-- SETTINGS MODAL -->
 <div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(13,27,46,0.6);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0;" onclick="if(event.target===this)closeSettingsModal()">
   <div style="background:#fff;border-radius:16px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.25);margin:auto;">
@@ -412,13 +412,25 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
       </div>
     </div>
   </div>
-</div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
- Atualizar Dados
- </button></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 20</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 20 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Ainda sem scan — vai ao separador Scanner para analisar</div></div><button onclick="goTab('scanner')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Novo Scanner</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Vai ao separador Scanner e clica em "Iniciar Scanner"</div><button class="tbl-scan-btn" onclick="goTab('scanner')">Ir para o Scanner</button></td></tr></tbody></table></div></div></div><!-- SCANNER --><div class="page" id="page-scanner"><div class="scanner-hero"><div class="sh-top"><div><div class="sh-eyebrow">Warren Buffett Method · Claude AI (Anthropic)</div><div class="sh-title">Scanner Automático de Mercado</div><div class="sh-sub">Fase 1: IA filtra 40 candidatos de 800+ ações. Fase 2: análise profunda com Claude AI. Resultado: Top 20 oportunidades.</div><div class="sh-stats"><div class="sh-stat"><div class="sh-stat-n">800+</div><div class="sh-stat-l">Ações monitorizadas</div></div><div class="sh-stat"><div class="sh-stat-n">2</div><div class="sh-stat-l">Fases de análise</div></div><div class="sh-stat"><div class="sh-stat-n">Top 20</div><div class="sh-stat-l">Melhores oportunidades</div></div></div></div><button class="scan-btn" id="scanBtn" onclick="startScan()">
- Iniciar Scanner
- </button></div></div><div class="last-run-bar" id="lastRunBar" style="display:none">
- Última análise: <strong id="lastRunDate"></strong> &nbsp;·&nbsp;  oportunidades
- <button onclick="startScan()" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px">Reanalisar</button></div><div class="phase-box" id="phaseBox" style="display:none"><div class="phase-title"><div class="spin"></div>&nbsp; Análise em curso...</div><div style="display:flex;flex-direction:column;gap:10px;"><div class="phase-row"><div class="phase-num ph-wait" id="ph1-num">1</div><div class="phase-info"><div class="phase-label">Fase 1 — Pré-filtragem inteligente</div><div class="phase-detail" id="ph1-detail">Claude AI seleciona as 40 de 800+ ações</div></div><div class="phase-track"><div class="phase-fill" id="ph1-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="preTickers"></div><div class="phase-row" style="margin-top:4px"><div class="phase-num ph-wait" id="ph2-num">2</div><div class="phase-info"><div class="phase-label">Fase 2 — Análise profunda com Claude AI</div><div class="phase-detail" id="ph2-detail">DCF, earnings, guidance, moat analysis</div></div><div class="phase-track"><div class="phase-fill" id="ph2-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="deepTickers"></div></div></div><div class="err-box" id="scanErr" style="display:none"></div><div class="filters-bar" id="filtersBar" style="display:none"><button class="filter-btn active" onclick="setFilter('all',this)">Todos</button><button class="filter-btn" onclick="setFilter('COMPRAR',this)">Comprar</button><button class="filter-btn" onclick="setFilter('AGUARDAR',this)">Aguardar</button><button class="filter-btn" onclick="setFilter('SPX',this)">S&P 500</button><button class="filter-btn" onclick="setFilter('DJI',this)">Dow Jones</button><button class="filter-btn" onclick="setFilter('NDX',this)">Nasdaq</button><button class="filter-btn" onclick="setFilter('DIV',this)">Dividendos</button><select class="sort-select" onchange="setSort(this.value)"><option value="rank">Ordenar: Score Buffett</option><option value="mos">Ordenar: Margem Segurança</option><option value="roe">Ordenar: ROE</option><option value="pe">Ordenar: P/E (menor)</option></select></div><div class="charts-row" id="chartsRow" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 20</div><div class="chart-sub">Pontuação composta 0-100</div><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 20</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="mosChart"></canvas></div></div></div><div class="rank-grid" id="rankGrid"></div><div class="empty" id="scanEmpty"><div class="empty-icon"></div><div class="empty-t">Clica em "Iniciar Scanner" para encontrar oportunidades</div><div class="empty-s">S&P 500 · Dow Jones · Nasdaq 100 · Dividend Aristocrats</div></div></div><!-- PORTFOLIO --><div class="page" id="page-portfolio"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;"><div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;">A Minha Carteira</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Valor intrínseco atualizado · próximos earnings · notícias e guidance</div></div><button class="btn btn-primary" onclick="refreshAll()" style="font-size:12px;padding:8px 16px">Atualizar Tudo</button></div><div class="card cp" style="margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Adicionar posição</div><div class="add-row"><div class="inp-group"><span class="inp-label">Ticker</span><input class="inp" id="nTicker" placeholder="AAPL" style="width:120px" onkeydown="if(event.key==='Enter')addStock()"/></div><div class="inp-group"><span class="inp-label">Preço Compra</span><div style="display:flex;gap:4px"><select class="inp" id="nCurrency" style="width:70px;padding:9px 6px;font-size:12px"><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select><input class="inp" id="nPrice" type="number" placeholder="0.00" style="width:100px"/></div></div><div class="inp-group"><span class="inp-label">Nº Ações</span><input class="inp" id="nQty" type="number" placeholder="10" style="width:100px"/></div><button class="add-btn" onclick="addStock()">+ Adicionar</button></div></div><div class="port-grid" id="portGrid"><div class="empty" id="portEmpty"><div class="empty-icon"></div><div class="empty-t">Carteira vazia</div><div class="empty-s">Adiciona o ticker e preço de compra acima</div></div></div></div>
+</div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><div style="display:flex;gap:8px;align-items:center;">
+  <div id="nextScanTime" style="font-size:11px;color:var(--muted);text-align:right;"></div>
+  <button onclick="loadDashboard()" style="background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:9px;padding:9px 14px;font-size:11px;font-weight:600;cursor:pointer;">Índices</button>
+  <button onclick="startScan()" id="dashScanBtnTop" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">▶ Analisar Agora</button>
+</div></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 50</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- SCAN PROGRESS (inline) -->
+<div id="scanProgressPanel" style="display:none;background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <div class="spin"></div>
+    <div style="font-size:14px;font-weight:700;color:#0d1b2e;">Análise em curso...</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div class="phase-row"><div class="phase-num ph-wait" id="ph1-num">1</div><div class="phase-info"><div class="phase-label">Fase 1 — Pré-filtragem inteligente</div><div class="phase-detail" id="ph1-detail">Claude AI seleciona candidatos de 800+ ações</div></div><div class="phase-track"><div class="phase-fill" id="ph1-fill" style="width:0%"></div></div></div>
+    <div class="pre-tickers" id="preTickers"></div>
+    <div class="phase-row" style="margin-top:4px"><div class="phase-num ph-wait" id="ph2-num">2</div><div class="phase-info"><div class="phase-label">Fase 2 — Análise profunda com Claude AI</div><div class="phase-detail" id="ph2-detail">DCF, earnings, guidance, moat analysis</div></div><div class="phase-track"><div class="phase-fill" id="ph2-fill" style="width:0%"></div></div></div>
+    <div class="pre-tickers" id="deepTickers"></div>
+  </div>
+  <div class="err-box" id="scanErr" style="display:none"></div>
+</div>
+<!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 50 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Análise automática às 09:00 · ou clica em "Analisar Agora"</div></div><button onclick="startScan()" id="dashScanBtn" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">▶ Analisar Agora</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Clica em "Analisar Agora" para iniciar a análise</div><button class="tbl-scan-btn" onclick="startScan()">Analisar Agora</button></td></tr></tbody></table></div></div></div><!-- PORTFOLIO --><!-- PORTFOLIO --><div class="page" id="page-portfolio"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;"><div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;">A Minha Carteira</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Valor intrínseco atualizado · próximos earnings · notícias e guidance</div></div><button class="btn btn-primary" onclick="refreshAll()" style="font-size:12px;padding:8px 16px">Atualizar Tudo</button></div><div class="card cp" style="margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Adicionar posição</div><div class="add-row"><div class="inp-group"><span class="inp-label">Ticker</span><input class="inp" id="nTicker" placeholder="AAPL" style="width:120px" onkeydown="if(event.key==='Enter')addStock()"/></div><div class="inp-group"><span class="inp-label">Preço Compra</span><div style="display:flex;gap:4px"><select class="inp" id="nCurrency" style="width:70px;padding:9px 6px;font-size:12px"><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select><input class="inp" id="nPrice" type="number" placeholder="0.00" style="width:100px"/></div></div><div class="inp-group"><span class="inp-label">Nº Ações</span><input class="inp" id="nQty" type="number" placeholder="10" style="width:100px"/></div><button class="add-btn" onclick="addStock()">+ Adicionar</button></div></div><div class="port-grid" id="portGrid"><div class="empty" id="portEmpty"><div class="empty-icon"></div><div class="empty-t">Carteira vazia</div><div class="empty-s">Adiciona o ticker e preço de compra acima</div></div></div></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -884,14 +896,14 @@ function renderIndices(data){
 
 // ── SCANNER ──
 async function startScan(){
-  if(!getKey()){alert('Anthropic API Key não configurada. Contacta o administrador.');return;}
-  var btn=document.getElementById('scanBtn');
-  if(btn){btn.disabled=true;btn.textContent='A analisar...';}
+  if(!getKey()){alert('Anthropic API Key não configurada. Abre as Definições para configurar.');return;}
+  // Show progress in dashboard
+  goTab('dashboard');
+  var panel=document.getElementById('scanProgressPanel');if(panel)panel.style.display='block';
   var errEl=document.getElementById('scanErr');if(errEl)errEl.style.display='none';
-  var rg=document.getElementById('rankGrid');if(rg)rg.innerHTML='';
-  ['chartsRow','filtersBar','lastRunBar'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-  var se=document.getElementById('scanEmpty');if(se)se.style.display='none';
   scanResults=[];
+  // Disable buttons
+  ['dashScanBtn','dashScanBtnTop'].forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=true;b.textContent='A analisar...';}});
   var pb=document.getElementById('phaseBox');if(pb)pb.style.display='block';
   setPh(1,'active');setPh(2,'wait');
   ['ph1-fill','ph2-fill'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.width='0%';});
@@ -910,7 +922,7 @@ async function startScan(){
     var pf2=document.getElementById('ph2-fill');if(pf2)pf2.style.width='100%';
     scanResults=deep.filter(function(r){return r&&r.ticker;})
       .sort(function(a,b){return (b.buffett_score||0)-(a.buffett_score||0);})
-      .slice(0,20)
+      .slice(0,50)
       .map(function(r,i){return Object.assign({},r,{rank:i+1});});
     LS.s(K.scan,{date:new Date().toISOString(),results:scanResults});
     lastScan=LS.g(K.scan);
@@ -921,8 +933,10 @@ async function startScan(){
     var er=document.getElementById('scanErr');
     if(er){er.style.display='block';er.textContent='Erro: '+e.message;}
     var pb3=document.getElementById('phaseBox');if(pb3)pb3.style.display='none';
+    var pp=document.getElementById('scanProgressPanel');if(pp)pp.style.display='none';
   }
-  if(btn){btn.disabled=false;btn.textContent='Reanalisar';}
+  ['dashScanBtn','dashScanBtnTop'].forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=false;b.textContent='▶ Analisar Agora';}});
+  scheduleNextScan();
 }
 
 async function phase1(){
@@ -931,14 +945,14 @@ async function phase1(){
   var candidates = baseCandidates.concat(extraTickers).filter(function(t,i,a){return a.indexOf(t)===i;});
   var cfg = getMethodConfig();
   var customRules = cfg.rules ? ' Additional rules: ' + cfg.rules : '';
-  var prompt='You are a Warren Buffett expert. From these stocks: '+candidates.join(',')+'. Select the 20 BEST Buffett opportunities. Criteria: ROE >'+cfg.roe+'%, net margin >'+cfg.margin+'%, P/E <'+cfg.pe+', debt <'+cfg.debt+' years FCF, moat score >'+cfg.moat+'/10, margin of safety >'+cfg.mos+'%.'+customRules+' Return ONLY JSON: {"top40":["TICK1","TICK2",...]} with exactly 20 tickers from the list.';
+  var prompt='You are a Warren Buffett expert. From these stocks: '+candidates.join(',')+'. Select the 20 BEST Buffett opportunities. Criteria: ROE >'+cfg.roe+'%, net margin >'+cfg.margin+'%, P/E <'+cfg.pe+', debt <'+cfg.debt+' years FCF, moat score >'+cfg.moat+'/10, margin of safety >'+cfg.mos+'%.'+customRules+' Return ONLY JSON: {"top40":["TICK1","TICK2",...]} with exactly 50 tickers from the list.';
   try{
     var data=await callGemini(prompt,false);
     var arr=data.top40||data.results||[];
     var filtered=arr.filter(function(t){return candidates.indexOf(t)>=0||ALL_T.indexOf(t)>=0;});
-    if(filtered.length>=10)return filtered.slice(0,20);
+    if(filtered.length>=10)return filtered.slice(0,50);
   }catch(e){console.warn('Phase1 error:',e.message);}
-  return ['KO','PG','V','MA','MSFT','GOOGL','MCD','SPGI','MCO','CME','BLK','ISRG','TMO','DHR','NEE','APD','SHW','INTU','ADBE','ACN'];
+  return ['KO','PG','V','MA','MSFT','GOOGL','MCD','SPGI','MCO','CME','BLK','ISRG','TMO','DHR','NEE','APD','SHW','INTU','ADBE','ACN','JNJ','UNH','AMGN','ABT','COST','HD','LOW','TXN','HON','EMR','MMC','AON','ADP','ORCL','QCOM','IBM','CAT','DE','GS','AXP','GILD','CI','ZTS','VRTX','ECL','WM','PLD','NOC','RTX','ITW','LIN'];
 }
 
 async function phase2(tickers){
@@ -977,6 +991,10 @@ async function analyzeOne(ticker){
 }
 
 function renderScanResults(){
+  // Route scan results to dashboard top table
+  renderTopTable();
+  refreshDashboardCharts();
+  updateQuickStats();
   var rg=document.getElementById('rankGrid');if(rg)rg.innerHTML='';
   var f=scanResults.slice();
   if(activeFilter==='COMPRAR')f=f.filter(function(r){return r.rating==='COMPRAR';});
@@ -992,7 +1010,6 @@ function renderScanResults(){
     el.innerHTML=buildCard(r,i+1);
     if(rg)rg.appendChild(el);
   });
-  var fb=document.getElementById('filtersBar');if(fb)fb.style.display='flex';
   renderScanCharts(f.slice(0,15));
   var cr=document.getElementById('chartsRow');if(cr)cr.style.display='grid';
   if(lastScan){
@@ -1210,6 +1227,38 @@ async function refreshAll(){
   if(btn){btn.disabled=false;btn.textContent='Atualizar Tudo';}
 }
 
+// ── AUTO SCAN SCHEDULER ──
+function getNextScan9am(){
+  var now = new Date();
+  var next = new Date(now);
+  next.setHours(9,0,0,0);
+  if(next <= now) next.setDate(next.getDate()+1);
+  return next;
+}
+
+function updateNextScanDisplay(){
+  var el = document.getElementById('nextScanTime');
+  if(!el) return;
+  var next = getNextScan9am();
+  var now = new Date();
+  var diffMs = next - now;
+  var diffH = Math.floor(diffMs/3600000);
+  var diffM = Math.floor((diffMs%3600000)/60000);
+  var label = diffH > 0 ? 'Próxima análise em ' + diffH + 'h ' + diffM + 'm' : 'Próxima análise em ' + diffM + 'm';
+  el.textContent = label;
+}
+
+function scheduleNextScan(){
+  var next = getNextScan9am();
+  var delay = next - new Date();
+  console.log('Next auto-scan in', Math.round(delay/60000), 'minutes');
+  if(window._scanTimer) clearTimeout(window._scanTimer);
+  window._scanTimer = setTimeout(function(){
+    console.log('Auto-scan triggered at 09:00');
+    startScan();
+  }, delay);
+}
+
 // ── INIT ──
 async function initApp(){
   // Reset state for fresh load per user
@@ -1269,8 +1318,19 @@ async function initApp(){
   // Init UI with restored data - renderPortfolio AFTER Firebase data is in portfolio
   initDashboard();
   renderPortfolio();
+  if(scanResults.length){ renderTopTable(); refreshDashboardCharts(); updateQuickStats(); }
   showLoadingOverlay(false);
-  console.log('App ready. Portfolio:', portfolio.length, 'stocks');
+  console.log('App ready. Portfolio:', portfolio.length, 'stocks, scan:', scanResults.length);
+  scheduleNextScan();
+  updateNextScanDisplay();
+  setInterval(updateNextScanDisplay, 60000);
+  // Auto-trigger if no scan today and it's past 09:00
+  var lastScanDate = lastScan && lastScan.date ? new Date(lastScan.date) : null;
+  var todayStr = new Date().toDateString();
+  if(getKey() && (!lastScanDate || lastScanDate.toDateString() !== todayStr) && new Date().getHours() >= 9){
+    console.log('Auto-scan: no scan today past 09:00, triggering...');
+    setTimeout(startScan, 4000);
+  }
 }
 
 function showLoadingOverlay(show){
