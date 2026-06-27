@@ -361,11 +361,11 @@ const LS={
   s:function(k,v){
     try{
       localStorage.setItem(k,JSON.stringify(v));
-      // Also sync to Firebase (async, non-blocking)
+      // Also sync to Firebase (async, non-blocking) - save raw value
       if(window.DB && (k===K.port||k===K.key||k===K.scan)){
         window.DB.save(k,v).then(function(ok){
-          if(ok) updateSyncStatus('synced');
-        }).catch(function(e){ updateSyncStatus('error'); });
+          if(ok){ console.log('Firebase synced:',k); updateSyncStatus('synced'); }
+        }).catch(function(e){ console.warn('Firebase sync error:',e.message); updateSyncStatus('error'); });
       }
       return true;
     }catch(e){console.warn('LS.set error',k,e);return false;}
@@ -1103,25 +1103,27 @@ async function initApp(){
         window.DB.load(K.port),
         window.DB.load(K.scan)
       ]);
-      if(fbKey && !getKey()){
-        LS.g(K.key); // just check local
-        localStorage.setItem(K.key, JSON.stringify(fbKey));
+      // Restore API key from Firebase
+      if(fbKey){
+        var keyVal=typeof fbKey==='string'?fbKey:JSON.stringify(fbKey);
+        localStorage.setItem(K.key, keyVal.startsWith('"')?keyVal:JSON.stringify(keyVal));
         updatePill();
-      } else if(fbKey){
-        localStorage.setItem(K.key, JSON.stringify(fbKey));
-        updatePill();
+        console.log('API key restored from Firebase');
       }
+      // Restore portfolio
       if(fbPort && fbPort.length){
         portfolio=fbPort;
         localStorage.setItem(K.port, JSON.stringify(fbPort));
+        console.log('Portfolio restored:',fbPort.length,'stocks');
       }
+      // Restore last scan
       if(fbScan && fbScan.results){
         lastScan=fbScan;
         localStorage.setItem(K.scan, JSON.stringify(fbScan));
         scanResults=fbScan.results;
+        console.log('Scan restored:',scanResults.length,'results');
       }
-      updateSyncStatus(fbPort||fbScan?'loaded':'synced');
-      console.log('Firebase loaded: portfolio=',portfolio.length,'scan=',scanResults.length);
+      updateSyncStatus((fbPort&&fbPort.length)||fbScan?'loaded':'synced');
     }catch(e){
       console.warn('Firebase load failed, using localStorage:',e.message);
       updateSyncStatus('error');
