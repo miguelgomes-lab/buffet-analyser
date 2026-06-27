@@ -325,7 +325,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 <!-- APP ROOT -->
 <div id="appRoot" style="display:none;">
 
-<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" onclick="openSettingsModal()" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Definições"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;" onclick="openSettingsModal()"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- Gemini Key modal removed - key stored in Firestore -->
+<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Claude AI</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" onclick="openSettingsModal()" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Definições"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;" onclick="openSettingsModal()"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- API Key modal removed - key stored in Firestore -->
 <!-- SETTINGS MODAL -->
 <div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(13,27,46,0.6);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0;" onclick="if(event.target===this)closeSettingsModal()">
   <div style="background:#fff;border-radius:16px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.25);margin:auto;">
@@ -343,10 +343,10 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 
     <!-- TAB: API KEY -->
     <div id="stab-content-api" style="padding:22px 24px;">
-      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Gemini API Key</div>
-      <div style="font-size:11px;color:#6b84a8;margin-bottom:10px;">Obtém a tua key em <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#1a56db;">aistudio.google.com</a>. Fica guardada de forma segura na tua conta.</div>
+      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Anthropic API Key</div>
+      <div style="font-size:11px;color:#6b84a8;margin-bottom:10px;">Obtém a tua key em <a href="https://console.anthropic.com/settings/api-keys" target="_blank" style="color:#1a56db;">console.anthropic.com</a>. Fica guardada de forma segura na tua conta.</div>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <input id="settingsKeyInput" type="password" placeholder="AIza..." style="flex:1;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:13px;outline:none;font-family:Inter,sans-serif;"/>
+        <input id="settingsKeyInput" type="password" placeholder="sk-ant-..." style="flex:1;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:13px;outline:none;font-family:Inter,sans-serif;"/>
         <button onclick="toggleSettingsKeyVisibility()" style="padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;cursor:pointer;font-size:14px;">👁</button>
       </div>
       <div id="settingsKeyStatus" style="font-size:11px;color:#6b84a8;margin-bottom:16px;min-height:16px;"></div>
@@ -414,11 +414,11 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
   </div>
 </div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
  Atualizar Dados
- </button></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 20</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 20 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Ainda sem scan — vai ao separador Scanner para analisar</div></div><button onclick="goTab('scanner')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Novo Scanner</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Vai ao separador Scanner e clica em "Iniciar Scanner"</div><button class="tbl-scan-btn" onclick="goTab('scanner')">Ir para o Scanner</button></td></tr></tbody></table></div></div></div><!-- SCANNER --><div class="page" id="page-scanner"><div class="scanner-hero"><div class="sh-top"><div><div class="sh-eyebrow">Warren Buffett Method · Google Gemini + Google Search</div><div class="sh-title">Scanner Automático de Mercado</div><div class="sh-sub">Fase 1: IA filtra 40 candidatos de 800+ ações. Fase 2: análise profunda com dados reais. Resultado: Top 20 oportunidades.</div><div class="sh-stats"><div class="sh-stat"><div class="sh-stat-n">800+</div><div class="sh-stat-l">Ações monitorizadas</div></div><div class="sh-stat"><div class="sh-stat-n">2</div><div class="sh-stat-l">Fases de análise</div></div><div class="sh-stat"><div class="sh-stat-n">Top 20</div><div class="sh-stat-l">Melhores oportunidades</div></div></div></div><button class="scan-btn" id="scanBtn" onclick="startScan()">
+ </button></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 20</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 20 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Ainda sem scan — vai ao separador Scanner para analisar</div></div><button onclick="goTab('scanner')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Novo Scanner</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Vai ao separador Scanner e clica em "Iniciar Scanner"</div><button class="tbl-scan-btn" onclick="goTab('scanner')">Ir para o Scanner</button></td></tr></tbody></table></div></div></div><!-- SCANNER --><div class="page" id="page-scanner"><div class="scanner-hero"><div class="sh-top"><div><div class="sh-eyebrow">Warren Buffett Method · Claude AI (Anthropic)</div><div class="sh-title">Scanner Automático de Mercado</div><div class="sh-sub">Fase 1: IA filtra 40 candidatos de 800+ ações. Fase 2: análise profunda com Claude AI. Resultado: Top 20 oportunidades.</div><div class="sh-stats"><div class="sh-stat"><div class="sh-stat-n">800+</div><div class="sh-stat-l">Ações monitorizadas</div></div><div class="sh-stat"><div class="sh-stat-n">2</div><div class="sh-stat-l">Fases de análise</div></div><div class="sh-stat"><div class="sh-stat-n">Top 20</div><div class="sh-stat-l">Melhores oportunidades</div></div></div></div><button class="scan-btn" id="scanBtn" onclick="startScan()">
  Iniciar Scanner
  </button></div></div><div class="last-run-bar" id="lastRunBar" style="display:none">
  Última análise: <strong id="lastRunDate"></strong> &nbsp;·&nbsp;  oportunidades
- <button onclick="startScan()" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px">Reanalisar</button></div><div class="phase-box" id="phaseBox" style="display:none"><div class="phase-title"><div class="spin"></div>&nbsp; Análise em curso...</div><div style="display:flex;flex-direction:column;gap:10px;"><div class="phase-row"><div class="phase-num ph-wait" id="ph1-num">1</div><div class="phase-info"><div class="phase-label">Fase 1 — Pré-filtragem inteligente</div><div class="phase-detail" id="ph1-detail">Gemini seleciona as 40 de 800+ ações</div></div><div class="phase-track"><div class="phase-fill" id="ph1-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="preTickers"></div><div class="phase-row" style="margin-top:4px"><div class="phase-num ph-wait" id="ph2-num">2</div><div class="phase-info"><div class="phase-label">Fase 2 — Análise profunda com Google Search</div><div class="phase-detail" id="ph2-detail">Dados reais: DCF, earnings, guidance</div></div><div class="phase-track"><div class="phase-fill" id="ph2-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="deepTickers"></div></div></div><div class="err-box" id="scanErr" style="display:none"></div><div class="filters-bar" id="filtersBar" style="display:none"><button class="filter-btn active" onclick="setFilter('all',this)">Todos</button><button class="filter-btn" onclick="setFilter('COMPRAR',this)">Comprar</button><button class="filter-btn" onclick="setFilter('AGUARDAR',this)">Aguardar</button><button class="filter-btn" onclick="setFilter('SPX',this)">S&P 500</button><button class="filter-btn" onclick="setFilter('DJI',this)">Dow Jones</button><button class="filter-btn" onclick="setFilter('NDX',this)">Nasdaq</button><button class="filter-btn" onclick="setFilter('DIV',this)">Dividendos</button><select class="sort-select" onchange="setSort(this.value)"><option value="rank">Ordenar: Score Buffett</option><option value="mos">Ordenar: Margem Segurança</option><option value="roe">Ordenar: ROE</option><option value="pe">Ordenar: P/E (menor)</option></select></div><div class="charts-row" id="chartsRow" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 20</div><div class="chart-sub">Pontuação composta 0-100</div><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 20</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="mosChart"></canvas></div></div></div><div class="rank-grid" id="rankGrid"></div><div class="empty" id="scanEmpty"><div class="empty-icon"></div><div class="empty-t">Clica em "Iniciar Scanner" para encontrar oportunidades</div><div class="empty-s">S&P 500 · Dow Jones · Nasdaq 100 · Dividend Aristocrats</div></div></div><!-- PORTFOLIO --><div class="page" id="page-portfolio"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;"><div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;">A Minha Carteira</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Valor intrínseco atualizado · próximos earnings · notícias e guidance</div></div><button class="btn btn-primary" onclick="refreshAll()" style="font-size:12px;padding:8px 16px">Atualizar Tudo</button></div><div class="card cp" style="margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Adicionar posição</div><div class="add-row"><div class="inp-group"><span class="inp-label">Ticker</span><input class="inp" id="nTicker" placeholder="AAPL" style="width:120px" onkeydown="if(event.key==='Enter')addStock()"/></div><div class="inp-group"><span class="inp-label">Preço Compra</span><div style="display:flex;gap:4px"><select class="inp" id="nCurrency" style="width:70px;padding:9px 6px;font-size:12px"><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select><input class="inp" id="nPrice" type="number" placeholder="0.00" style="width:100px"/></div></div><div class="inp-group"><span class="inp-label">Nº Ações</span><input class="inp" id="nQty" type="number" placeholder="10" style="width:100px"/></div><button class="add-btn" onclick="addStock()">+ Adicionar</button></div></div><div class="port-grid" id="portGrid"><div class="empty" id="portEmpty"><div class="empty-icon"></div><div class="empty-t">Carteira vazia</div><div class="empty-s">Adiciona o ticker e preço de compra acima</div></div></div></div>
+ <button onclick="startScan()" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px">Reanalisar</button></div><div class="phase-box" id="phaseBox" style="display:none"><div class="phase-title"><div class="spin"></div>&nbsp; Análise em curso...</div><div style="display:flex;flex-direction:column;gap:10px;"><div class="phase-row"><div class="phase-num ph-wait" id="ph1-num">1</div><div class="phase-info"><div class="phase-label">Fase 1 — Pré-filtragem inteligente</div><div class="phase-detail" id="ph1-detail">Claude AI seleciona as 40 de 800+ ações</div></div><div class="phase-track"><div class="phase-fill" id="ph1-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="preTickers"></div><div class="phase-row" style="margin-top:4px"><div class="phase-num ph-wait" id="ph2-num">2</div><div class="phase-info"><div class="phase-label">Fase 2 — Análise profunda com Claude AI</div><div class="phase-detail" id="ph2-detail">DCF, earnings, guidance, moat analysis</div></div><div class="phase-track"><div class="phase-fill" id="ph2-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="deepTickers"></div></div></div><div class="err-box" id="scanErr" style="display:none"></div><div class="filters-bar" id="filtersBar" style="display:none"><button class="filter-btn active" onclick="setFilter('all',this)">Todos</button><button class="filter-btn" onclick="setFilter('COMPRAR',this)">Comprar</button><button class="filter-btn" onclick="setFilter('AGUARDAR',this)">Aguardar</button><button class="filter-btn" onclick="setFilter('SPX',this)">S&P 500</button><button class="filter-btn" onclick="setFilter('DJI',this)">Dow Jones</button><button class="filter-btn" onclick="setFilter('NDX',this)">Nasdaq</button><button class="filter-btn" onclick="setFilter('DIV',this)">Dividendos</button><select class="sort-select" onchange="setSort(this.value)"><option value="rank">Ordenar: Score Buffett</option><option value="mos">Ordenar: Margem Segurança</option><option value="roe">Ordenar: ROE</option><option value="pe">Ordenar: P/E (menor)</option></select></div><div class="charts-row" id="chartsRow" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 20</div><div class="chart-sub">Pontuação composta 0-100</div><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 20</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="mosChart"></canvas></div></div></div><div class="rank-grid" id="rankGrid"></div><div class="empty" id="scanEmpty"><div class="empty-icon"></div><div class="empty-t">Clica em "Iniciar Scanner" para encontrar oportunidades</div><div class="empty-s">S&P 500 · Dow Jones · Nasdaq 100 · Dividend Aristocrats</div></div></div><!-- PORTFOLIO --><div class="page" id="page-portfolio"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;"><div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;">A Minha Carteira</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Valor intrínseco atualizado · próximos earnings · notícias e guidance</div></div><button class="btn btn-primary" onclick="refreshAll()" style="font-size:12px;padding:8px 16px">Atualizar Tudo</button></div><div class="card cp" style="margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Adicionar posição</div><div class="add-row"><div class="inp-group"><span class="inp-label">Ticker</span><input class="inp" id="nTicker" placeholder="AAPL" style="width:120px" onkeydown="if(event.key==='Enter')addStock()"/></div><div class="inp-group"><span class="inp-label">Preço Compra</span><div style="display:flex;gap:4px"><select class="inp" id="nCurrency" style="width:70px;padding:9px 6px;font-size:12px"><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select><input class="inp" id="nPrice" type="number" placeholder="0.00" style="width:100px"/></div></div><div class="inp-group"><span class="inp-label">Nº Ações</span><input class="inp" id="nQty" type="number" placeholder="10" style="width:100px"/></div><button class="add-btn" onclick="addStock()">+ Adicionar</button></div></div><div class="port-grid" id="portGrid"><div class="empty" id="portEmpty"><div class="empty-icon"></div><div class="empty-t">Carteira vazia</div><div class="empty-s">Adiciona o ticker e preço de compra acima</div></div></div></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -524,7 +524,7 @@ const LS={
     }catch(e){return false;}
   }
 };
-const K={key:'bfa_gemini_key',port:'bfa_port',scan:'bfa_scan',idx:'bfa_indices'};
+const K={key:'bfa_anthropic_key',port:'bfa_port',scan:'bfa_scan',idx:'bfa_indices'};
 var portfolio=LS.g(K.port)||[];
 var lastScan=LS.g(K.scan)||null;
 var scanResults=[];
@@ -618,7 +618,7 @@ function openSettingsModal(){
   var input = document.getElementById('settingsKeyInput');
   var status = document.getElementById('settingsKeyStatus');
   var current = getKey();
-  if(current){ input.value = current; status.textContent = '✓ Key configurada (' + current.length + ' caracteres)'; status.style.color='#16a34a'; }
+  if(current){ input.value = current; status.textContent = '✓ API Key configurada (' + current.length + ' caracteres)'; status.style.color='#16a34a'; }
   else { input.value = ''; status.textContent = 'Sem key configurada — a app não funciona sem ela.'; status.style.color='#dc2626'; }
   switchSettingsTab('api');
   document.getElementById('settingsModal').style.display = 'flex';
@@ -673,86 +673,34 @@ function parseJSON(raw){
   }
 }
 
-// ── GEMINI API ──
-var GEMINI_MODELS=[
-  'gemini-2.0-flash-001','gemini-2.0-flash','gemini-2.5-flash-preview-05-20',
-  'gemini-1.5-flash-002','gemini-1.5-flash-001','gemini-1.5-pro-002','gemini-1.5-pro-001'
-];
-var _workingModel=null;
-
-async function discoverModel(key){
-  try{
-    var res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
-    if(!res.ok)return null;
-    var data=await res.json();
-    var available=(data.models||[])
-      .filter(function(m){return m.supportedGenerationMethods&&m.supportedGenerationMethods.includes('generateContent');})
-      .map(function(m){return m.name.replace('models/','');});
-    console.log('Available models:',available.slice(0,8));
-    for(var i=0;i<GEMINI_MODELS.length;i++){
-      if(available.indexOf(GEMINI_MODELS[i])>=0)return GEMINI_MODELS[i];
-    }
-    var flash=available.find(function(m){return m.indexOf('flash')>=0;});
-    return flash||available[0]||null;
-  }catch(e){console.warn('discoverModel error:',e.message);return null;}
+// ── ANTHROPIC API ──
+async function callGeminiRaw(prompt, useSearch){
+  var key = getKey();
+  if(!key) throw new Error('Sem API Key. Abre as Definições para configurar.');
+  var res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2048,
+      messages: [{role:'user', content: prompt}]
+    })
+  });
+  if(!res.ok){
+    var err = await res.json().catch(function(){return {};});
+    throw new Error(err.error&&err.error.message ? err.error.message : 'HTTP '+res.status);
+  }
+  var data = await res.json();
+  return (data.content||[]).map(function(b){return b.text||'';}).join('');
 }
 
-async function callGeminiRaw(prompt,useSearch){
-  var key=getKey();
-  if(!key)throw new Error('Sem API Key. Clica em "Gemini Key" para configurar.');
-  if(!_workingModel){
-    var found=await discoverModel(key);
-    if(found){_workingModel=found;console.log('Model selected:',found);}
-    else{_workingModel=GEMINI_MODELS[0];}
-  }
-  var body={
-    contents:[{parts:[{text:prompt}]}],
-    generationConfig:{temperature:0.1,maxOutputTokens:2048}
-  };
-  if(useSearch){
-    body.tools=[{googleSearch:{}}];
-  } else {
-    body.generationConfig.responseMimeType='application/json';
-  }
-  // Try working model first, then fallback list
-  var toTry=useSearch
-    ?[_workingModel,'gemini-2.0-flash-001','gemini-2.0-flash','gemini-1.5-flash-002','gemini-1.5-flash-001']
-    :[_workingModel];
-  var seen={};
-  var lastErr='';
-  for(var i=0;i<toTry.length;i++){
-    var model=toTry[i];
-    if(!model||seen[model])continue;
-    seen[model]=true;
-    try{
-      var res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{
-        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
-      });
-      if(!res.ok){
-        var err=await res.json().catch(function(){return {};});
-        lastErr=err.error&&err.error.message?err.error.message:'HTTP '+res.status;
-        if(res.status===404||lastErr.indexOf('not found')>=0||lastErr.indexOf('not supported')>=0){
-          if(model===_workingModel)_workingModel=null;
-          continue;
-        }
-        throw new Error(lastErr);
-      }
-      var data=await res.json();
-      _workingModel=model;
-      return (data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts||[])
-        .map(function(p){return p.text||'';}).join('');
-    }catch(e){
-      if(e.message.indexOf('not found')>=0||e.message.indexOf('not supported')>=0||e.message.indexOf('404')>=0){
-        lastErr=e.message;continue;
-      }
-      throw e;
-    }
-  }
-  throw new Error('Nenhum modelo disponivel. Ultimo erro: '+lastErr);
-}
-
-async function callGemini(prompt,useSearch){
-  var raw=await callGeminiRaw(prompt,useSearch||false);
+async function callGemini(prompt, useSearch){
+  var raw = await callGeminiRaw(prompt, useSearch||false);
   return parseJSON(raw);
 }
 
@@ -867,7 +815,7 @@ function refreshDashboardCharts(){
 }
 
 async function loadDashboard(){
-  if(!getKey()){alert('Gemini API Key não configurada. Contacta o administrador.');return;}
+  if(!getKey()){alert('Anthropic API Key não configurada. Contacta o administrador.');return;}
   var btn=document.getElementById('dashRefreshBtn');
   if(btn){btn.disabled=true;btn.textContent='A carregar...';}
   await loadIndices();
@@ -883,12 +831,13 @@ async function loadIndices(){
   if(grid)grid.innerHTML='<div class="idx-card idx-sp" style="grid-column:1/-1"><div class="idx-loading"><div class="spin"></div> A carregar indices...</div></div>';
   try{
     // Call 1: indices only
-    var p1='Search Google for TODAY live values. Return ONLY JSON no extra text: {"sp500":{"value":5800,"weekly":1.2,"monthly":-0.5,"yearly":18.3,"ytd":12.1},"nasdaq":{"value":18500,"weekly":0.8,"monthly":-1.2,"yearly":22.1,"ytd":15.3},"dowjones":{"value":43000,"weekly":0.5,"monthly":0.2,"yearly":14.2,"ytd":8.1}} Fill with real current S&P500, Nasdaq, Dow Jones values and their weekly/monthly/yearly/YTD % changes.';
-    var r1=await callGeminiRaw(p1,true);
+    var today=new Date().toISOString().slice(0,10);
+    var p1='Today is '+today+'. Provide your best estimate of current market values. Return ONLY valid JSON, no extra text: {"sp500":{"value":5800,"weekly":1.2,"monthly":-0.5,"yearly":18.3,"ytd":12.1},"nasdaq":{"value":18500,"weekly":0.8,"monthly":-1.2,"yearly":22.1,"ytd":15.3},"dowjones":{"value":43000,"weekly":0.5,"monthly":0.2,"yearly":14.2,"ytd":8.1}} Fill with your best knowledge of current S&P500, Nasdaq, Dow Jones values and their approximate weekly/monthly/yearly/YTD % changes. Use realistic recent values.';
+    var r1=await callGeminiRaw(p1,false);
     var d1=parseJSON(r1);
     // Call 2: commodities
-    var p2='Search Google for TODAY prices. Return ONLY JSON: {"vix":18.5,"oil":72.3,"gold":2350,"btc":65000} Fill with real current VIX, WTI oil USD/barrel, Gold USD/oz, Bitcoin USD.';
-    var r2=await callGeminiRaw(p2,true);
+    var p2='Today is '+today+'. Return ONLY valid JSON: {"vix":18.5,"oil":72.3,"gold":2350,"btc":65000} Fill with your best knowledge of current VIX index, WTI crude oil price USD/barrel, Gold spot price USD/oz, Bitcoin USD price.';
+    var r2=await callGeminiRaw(p2,false);
     var d2=parseJSON(r2);
     var data=Object.assign({},d1,d2);
     LS.s(K.idx,{date:new Date().toISOString(),data:data});
@@ -935,7 +884,7 @@ function renderIndices(data){
 
 // ── SCANNER ──
 async function startScan(){
-  if(!getKey()){alert('Gemini API Key não configurada. Contacta o administrador.');return;}
+  if(!getKey()){alert('Anthropic API Key não configurada. Contacta o administrador.');return;}
   var btn=document.getElementById('scanBtn');
   if(btn){btn.disabled=true;btn.textContent='A analisar...';}
   var errEl=document.getElementById('scanErr');if(errEl)errEl.style.display='none';
@@ -1194,7 +1143,7 @@ function buildPortCard(s){
   var cur=s.currency||'USD';
   var upd=s.lastUpdated?new Date(s.lastUpdated).toLocaleDateString('pt-PT'):'';
   var _sym2=s.currency==='EUR'?'€':'$';
-  if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name" style="color:var(--muted)">Sem dados</div></div><div class="pc-btns"><button class="pc-btn pc-btn-r" onclick="fetchStock(\''+s.ticker+'\')">Analisar</button><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Preco de compra: '+(s.buyPrice?_sym2+s.buyPrice.toFixed(2):'—')+'</div><button onclick="fetchStock(\''+s.ticker+'\''+')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Gemini</button></div></div></div>';
+  if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name" style="color:var(--muted)">Sem dados</div></div><div class="pc-btns"><button class="pc-btn pc-btn-r" onclick="fetchStock(\''+s.ticker+'\')">Analisar</button><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Preco de compra: '+(s.buyPrice?_sym2+s.buyPrice.toFixed(2):'—')+'</div><button onclick="fetchStock(\''+s.ticker+'\''+')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Claude</button></div></div></div>';
   var pnl=s.buyPrice&&d.current_price?((d.current_price-s.buyPrice)/s.buyPrice*100):null;
   var pnlStr=pnl!=null?(pnl>0?'+':'')+pnl.toFixed(2)+'%':'—';
   var pnlC=pnl>0?'var(--green)':pnl<0?'var(--red)':'var(--muted)';
@@ -1251,7 +1200,7 @@ async function fetchStock(ticker){
 }
 
 async function refreshAll(){
-  if(!getKey()){alert('Gemini API Key não configurada. Contacta o administrador.');return;}
+  if(!getKey()){alert('Anthropic API Key não configurada. Contacta o administrador.');return;}
   var btn=document.getElementById('refreshAllBtn');
   if(btn){btn.disabled=true;btn.textContent='A atualizar...';}
   // Refresh sequentially to avoid rate limits
