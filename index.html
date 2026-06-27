@@ -973,7 +973,7 @@ async function phase1(){
   var candidates = baseCandidates.concat(extraTickers).filter(function(t,i,a){return a.indexOf(t)===i;});
   var cfg = getMethodConfig();
   var customRules = cfg.rules ? ' Additional rules: ' + cfg.rules : '';
-  var prompt='You are a Warren Buffett expert. From these stocks: '+candidates.join(',')+'. Select the 20 BEST Buffett opportunities. Criteria: ROE >'+cfg.roe+'%, net margin >'+cfg.margin+'%, P/E <'+cfg.pe+', debt <'+cfg.debt+' years FCF, moat score >'+cfg.moat+'/10, margin of safety >'+cfg.mos+'%.'+customRules+' Return ONLY JSON: {"top40":["TICK1","TICK2",...]} with exactly 50 tickers from the list.';
+  var prompt='You are a Warren Buffett expert. From these stocks: '+candidates.join(',')+'. Select the 50 best candidates for deep Buffett analysis — companies with historically strong fundamentals, durable competitive advantages, and quality businesses. Do not invent financial numbers. Just select tickers based on your knowledge of each company business quality.'+customRules+' Return ONLY JSON: {"top40":["TICK1","TICK2",...]} with exactly 50 tickers.';
   try{
     var data=await callGemini(prompt,false);
     var arr=data.top40||data.results||[];
@@ -1013,42 +1013,85 @@ async function phase2(tickers){
 async function analyzeOne(ticker){
   var cfg2 = getMethodConfig();
   var customRules2 = cfg2.rules ? ' Extra criteria: ' + cfg2.rules : '';
-  var prompt='Analyze stock '+ticker+' as Warren Buffett would. Score 0-100. Rate COMPRAR only if ROE>'+cfg2.roe+'%, margin>'+cfg2.margin+'%, P/E<'+cfg2.pe+', debt<'+cfg2.debt+'yrs, moat>'+cfg2.moat+'/10, margin_of_safety>'+cfg2.mos+'%.'+customRules2+' '+
-    'For moat_score (0-10), calculate objectively: '+
-    '(1) ROE consistency: avg 5yr ROE>15%=+2pts; '+
-    '(2) Net margin stability: stable/growing gross margin>40%=+2pts; '+
-    '(3) ROIC vs WACC: ROIC consistently>WACC=+2pts; '+
-    '(4) Pricing power: can raise prices without losing customers=+2pts; '+
-    '(5) Market dominance: top 2 in sector, high switching costs or network effect=+2pts. '+
-    'moat_justification must explain the score in 1 sentence citing the strongest factor or weakness. '+
-    'Use training knowledge. Return ONLY JSON: {"ticker":"'+ticker+'","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"moat_justification":"","intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0}';
-  var raw=await callGeminiRaw(prompt,false);
-  var data=parseJSON(raw);
 
-  // Fetch Yahoo fundamentals and apply real DCF
+  // Step 1: Get real data from Yahoo Finance
+  var yPrice = null, yFund = null, dcf = null;
   try{
-    var yPrice = await fetchYahooPrice(ticker);
-    var yFund = await fetchYahooFundamentals(ticker);
-    if(yPrice && yPrice.price) data.current_price = yPrice.price;
-    if(yFund){
-      if(yFund.roe) data.roe = yFund.roe * 100;
-      if(yFund.netMargin) data.net_margin = yFund.netMargin * 100;
-      if(yFund.pe) data.pe_ratio = yFund.pe;
-      if(yFund.dividendYield) data.dividend_yield = yFund.dividendYield * 100;
-      if(yFund.earningsGrowth) data.eps_growth = yFund.earningsGrowth * 100;
-      var dcf = calcDCF(yFund, ticker);
-      if(dcf && dcf.intrinsicValue > 0){
-        data.intrinsic_value = dcf.intrinsicValue;
-        data.dcf = dcf;
-      }
-      if(data.current_price > 0 && data.intrinsic_value > 0)
-        data.margin_of_safety = ((data.intrinsic_value - data.current_price) / data.intrinsic_value * 100);
-      if(data.intrinsic_value > 0) data.buy_price = data.intrinsic_value * 0.80;
-    }
-  }catch(yErr){ console.warn('Yahoo enrichment failed for '+ticker+':', yErr.message); }
+    var yResults = await Promise.all([fetchYahooPrice(ticker), fetchYahooFundamentals(ticker)]);
+    yPrice = yResults[0];
+    yFund = yResults[1];
+    if(yFund) dcf = calcDCF(yFund, ticker);
+  }catch(e){ console.warn('Yahoo failed for '+ticker, e.message); }
 
-  return data;
+  // Step 2: Build prompt with REAL data - AI only does qualitative analysis
+  var realData = '';
+  if(yPrice) realData += 'Current price: $'+yPrice.price.toFixed(2)+' ('+yPrice.currency+'). ';
+  if(yFund){
+    if(yFund.roe!=null) realData += 'ROE: '+(yFund.roe*100).toFixed(1)+'%. ';
+    if(yFund.netMargin!=null) realData += 'Net margin: '+(yFund.netMargin*100).toFixed(1)+'%. ';
+    if(yFund.pe!=null) realData += 'P/E: '+yFund.pe.toFixed(1)+'. ';
+    if(yFund.revenue!=null) realData += 'Revenue: $'+(yFund.revenue/1e9).toFixed(1)+'B. ';
+    if(yFund.fcf!=null) realData += 'FCF: $'+(yFund.fcf/1e9).toFixed(1)+'B. ';
+    if(yFund.totalDebt!=null) realData += 'Total debt: $'+(yFund.totalDebt/1e9).toFixed(1)+'B. ';
+    if(yFund.earningsGrowth!=null) realData += 'Earnings growth: '+(yFund.earningsGrowth*100).toFixed(1)+'%. ';
+    if(yFund.dividendYield!=null) realData += 'Dividend yield: '+(yFund.dividendYield*100).toFixed(2)+'%. ';
+    if(yFund.beta!=null) realData += 'Beta: '+yFund.beta.toFixed(2)+'. ';
+    if(dcf) realData += 'DCF intrinsic value (calculated): $'+dcf.intrinsicValue.toFixed(2)+'/share (WACC '+( dcf.wacc*100).toFixed(1)+'%, FCF growth '+(dcf.fcfGrowthUsed*100).toFixed(1)+'%). ';
+  }
+
+  var prompt = 'You are a Warren Buffett analyst. Here are the REAL financial data for '+ticker+': '+realData
+    +' Using ONLY these real numbers (do not invent or estimate any financial figures), provide: '
+    +'(1) moat_score 0-10 based on the real margins/ROE/growth provided '
+    +'(2) moat_justification: 1 sentence on competitive advantage '
+    +'(3) buffett_score 0-100 based on the real data vs Buffett criteria (ROE>'+cfg2.roe+'%, margin>'+cfg2.margin+'%, P/E<'+cfg2.pe+', moat>'+cfg2.moat+') '
+    +'(4) rating: COMPRAR if margin_of_safety>'+(dcf?cfg2.mos:'20')+'% and quality criteria met, else AGUARDAR '
+    +'(5) thesis: 2-3 sentences qualitative analysis of the business quality and competitive position '
+    +'(6) next_earnings: approximate next earnings date if known '
+    +'(7) guidance: brief description of recent company guidance '
+    +customRules2
+    +' Return ONLY JSON: {"sector":"","moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","thesis":"","next_earnings":"","guidance":""}';
+
+  var raw = await callGeminiRaw(prompt, false);
+  var aiData = parseJSON(raw);
+
+  // Step 3: Build final result combining real data + AI qualitative analysis
+  var currentPrice = (yPrice&&yPrice.price) || 0;
+  var intrinsicValue = (dcf&&dcf.intrinsicValue) || 0;
+  var mos = (currentPrice>0&&intrinsicValue>0) ? ((intrinsicValue-currentPrice)/intrinsicValue*100) : 0;
+
+  return {
+    ticker: ticker,
+    company_name: (yPrice&&yPrice.name) || ticker,
+    sector: aiData.sector || '',
+    // Real data from Yahoo
+    current_price: currentPrice,
+    roe: yFund&&yFund.roe!=null ? yFund.roe*100 : 0,
+    net_margin: yFund&&yFund.netMargin!=null ? yFund.netMargin*100 : 0,
+    pe_ratio: yFund&&yFund.pe || 0,
+    eps_growth: yFund&&yFund.earningsGrowth!=null ? yFund.earningsGrowth*100 : 0,
+    debt_years: (yFund&&yFund.totalDebt&&yFund.fcf&&yFund.fcf>0) ? yFund.totalDebt/yFund.fcf : 0,
+    dividend_yield: yFund&&yFund.dividendYield!=null ? yFund.dividendYield*100 : 0,
+    week_change: (yPrice&&yPrice.changePct) || 0,
+    // DCF calculated values
+    intrinsic_value: intrinsicValue,
+    margin_of_safety: mos,
+    buy_price: intrinsicValue>0 ? intrinsicValue*0.80 : 0,
+    dcf: dcf,
+    // AI qualitative
+    moat_score: aiData.moat_score || 0,
+    moat_justification: aiData.moat_justification || '',
+    buffett_score: aiData.buffett_score || 0,
+    rating: aiData.rating || 'AGUARDAR',
+    thesis: aiData.thesis || '',
+    next_earnings: aiData.next_earnings || '',
+    guidance: aiData.guidance || '',
+    yahoo_change_pct: yPrice&&yPrice.changePct,
+    yahoo_currency: yPrice&&yPrice.currency||'USD',
+    yahoo_market_state: yPrice&&yPrice.marketState,
+    fundamentals: yFund
+  };
 }
+
 
 function renderScanResults(){
   // Route scan results to dashboard top table
@@ -1407,59 +1450,87 @@ async function fetchStock(ticker){
   var idx=portfolio.findIndex(function(s){return s.ticker===ticker;});
   if(idx===-1)return;
   var cardEl=document.getElementById('pc-'+ticker);
-  if(cardEl){var b=cardEl.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A analisar '+ticker+'...</div></div>';}
+  if(cardEl){var b=cardEl.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A carregar dados reais de '+ticker+'...</div></div>';}
 
-  // Fetch real price + fundamentals from Yahoo Finance in parallel with AI analysis
-  var yahooPromise = Promise.all([fetchYahooPrice(ticker), fetchYahooFundamentals(ticker)]);
-
-  var prompt='Analyze '+ticker+' as Warren Buffett investor. Do NOT estimate current_price or intrinsic_value (will be calculated with real DCF data). '+
-    'For moat_score (0-10), calculate objectively: '+
-    '(1) ROE 5yr avg>15%=+2; (2) Gross margin>40% stable=+2; (3) ROIC>WACC=+2; (4) Pricing power=+2; (5) Market dominance/switching costs/network effect=+2. '+
-    'moat_justification: 1 sentence on the key moat factor. '+
-    'Return ONLY this JSON: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":""}';
   try{
-    var results = await Promise.all([callGeminiRaw(prompt,false), yahooPromise]);
-    var data = parseJSON(results[0]);
-    var yahoo = results[1][0];
-    var fundamentals = results[1][1];
+    // Step 1: Fetch ALL real data from Yahoo Finance
+    var yResults = await Promise.all([fetchYahooPrice(ticker), fetchYahooFundamentals(ticker)]);
+    var yPrice = yResults[0];
+    var yFund = yResults[1];
+    var dcf = yFund ? calcDCF(yFund, ticker) : null;
 
-    // Override with real Yahoo Finance price
-    if(yahoo && yahoo.price){
-      data.current_price = yahoo.price;
-      data.yahoo_currency = yahoo.currency;
-      data.yahoo_change = yahoo.change;
-      data.yahoo_change_pct = yahoo.changePct;
-      data.yahoo_prev_close = yahoo.previousClose;
-      data.yahoo_market_state = yahoo.marketState;
-      if(yahoo.name && !data.company_name) data.company_name = yahoo.name;
+    // Step 2: Build prompt with REAL data - AI only does qualitative analysis
+    var realData = '';
+    if(yPrice) realData += 'Current price: $'+yPrice.price.toFixed(2)+' ('+yPrice.currency+'). Daily change: '+(yPrice.changePct>=0?'+':'')+yPrice.changePct.toFixed(2)+'%. ';
+    if(yFund){
+      if(yFund.roe!=null) realData += 'ROE: '+(yFund.roe*100).toFixed(1)+'%. ';
+      if(yFund.netMargin!=null) realData += 'Net margin: '+(yFund.netMargin*100).toFixed(1)+'%. ';
+      if(yFund.pe!=null) realData += 'P/E trailing: '+yFund.pe.toFixed(1)+'. ';
+      if(yFund.revenue!=null) realData += 'Revenue TTM: $'+(yFund.revenue/1e9).toFixed(2)+'B. ';
+      if(yFund.netIncome!=null) realData += 'Net income TTM: $'+(yFund.netIncome/1e9).toFixed(2)+'B. ';
+      if(yFund.fcf!=null) realData += 'FCF TTM: $'+(yFund.fcf/1e9).toFixed(2)+'B. ';
+      if(yFund.totalDebt!=null) realData += 'Total debt: $'+(yFund.totalDebt/1e9).toFixed(2)+'B. ';
+      if(yFund.cash!=null) realData += 'Cash: $'+(yFund.cash/1e9).toFixed(2)+'B. ';
+      if(yFund.earningsGrowth!=null) realData += 'Earnings growth YoY: '+(yFund.earningsGrowth*100).toFixed(1)+'%. ';
+      if(yFund.revenueGrowth!=null) realData += 'Revenue growth YoY: '+(yFund.revenueGrowth*100).toFixed(1)+'%. ';
+      if(yFund.dividendYield!=null) realData += 'Dividend yield: '+(yFund.dividendYield*100).toFixed(2)+'%. ';
+      if(yFund.beta!=null) realData += 'Beta: '+yFund.beta.toFixed(2)+'. ';
+      if(yFund.eps!=null) realData += 'EPS trailing: $'+yFund.eps.toFixed(2)+'. ';
+      if(dcf) realData += 'DCF intrinsic value (10yr model, WACC '+(dcf.wacc*100).toFixed(1)+'%, FCF growth '+(dcf.fcfGrowthUsed*100).toFixed(1)+'%): $'+dcf.intrinsicValue.toFixed(2)+'/share. ';
     }
 
-    // Override fundamentals with real Yahoo data
-    if(fundamentals){
-      if(fundamentals.roe) data.roe = fundamentals.roe * 100;
-      if(fundamentals.netMargin) data.net_margin = fundamentals.netMargin * 100;
-      if(fundamentals.pe) data.pe_ratio = fundamentals.pe;
-      if(fundamentals.dividendYield) data.dividend_yield = fundamentals.dividendYield * 100;
-      if(fundamentals.earningsGrowth) data.eps_growth = fundamentals.earningsGrowth * 100;
-      if(fundamentals.totalDebt && fundamentals.fcf && fundamentals.fcf>0)
-        data.debt_years = fundamentals.totalDebt / fundamentals.fcf;
-      data.fundamentals = fundamentals;
-    }
+    var prompt = 'You are a Warren Buffett analyst. Here are the REAL financial data for '+ticker+' from Yahoo Finance: '+realData
+      +' Using ONLY these real numbers (do not invent or estimate any financial figures), provide: '
+      +'(1) company_name: official company name '
+      +'(2) sector: business sector '
+      +'(3) moat_score 0-10: based on real margins/ROE/growth consistency '
+      +'(4) moat_justification: 1 sentence on the specific competitive advantage or weakness '
+      +'(5) buffett_score 0-100: quality score based on the real data provided '
+      +'(6) rating: COMPRAR if price is below DCF intrinsic value by >20% AND quality is high, else AGUARDAR '
+      +'(7) thesis: 2-3 sentences on business quality and competitive position '
+      +'(8) next_earnings: approximate next earnings date '
+      +'(9) earnings_countdown: approximate days until next earnings '
+      +'(10) guidance: most recent company revenue/earnings guidance '
+      +'(11) news: 3 recent relevant news items with title, source, date '
+      +' Return ONLY JSON: {"company_name":"","sector":"","moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}]}';
 
-    // Calculate DCF intrinsic value with real data
-    var dcf = calcDCF(fundamentals, ticker);
-    if(dcf && dcf.intrinsicValue > 0){
-      data.intrinsic_value = dcf.intrinsicValue;
-      data.dcf = dcf;
-    }
+    var raw = await callGeminiRaw(prompt, false);
+    var aiData = parseJSON(raw);
 
-    // Recalculate margin of safety with real price + real DCF
-    if(data.current_price > 0 && data.intrinsic_value > 0){
-      data.margin_of_safety = ((data.intrinsic_value - data.current_price) / data.intrinsic_value * 100);
-    }
+    // Step 3: Combine real data + AI qualitative
+    var currentPrice = (yPrice&&yPrice.price) || 0;
+    var intrinsicValue = (dcf&&dcf.intrinsicValue) || 0;
+    var mos = (currentPrice>0&&intrinsicValue>0) ? ((intrinsicValue-currentPrice)/intrinsicValue*100) : 0;
 
-    // Update buy_price suggestion (20% discount to intrinsic)
-    if(data.intrinsic_value > 0) data.buy_price = data.intrinsic_value * 0.80;
+    var data = {
+      company_name: aiData.company_name || (yPrice&&yPrice.name) || ticker,
+      sector: aiData.sector || '',
+      current_price: currentPrice,
+      roe: yFund&&yFund.roe!=null ? yFund.roe*100 : 0,
+      net_margin: yFund&&yFund.netMargin!=null ? yFund.netMargin*100 : 0,
+      pe_ratio: yFund&&yFund.pe || 0,
+      eps_growth: yFund&&yFund.earningsGrowth!=null ? yFund.earningsGrowth*100 : 0,
+      debt_years: (yFund&&yFund.totalDebt&&yFund.fcf&&yFund.fcf>0) ? yFund.totalDebt/yFund.fcf : 0,
+      dividend_yield: yFund&&yFund.dividendYield!=null ? yFund.dividendYield*100 : 0,
+      intrinsic_value: intrinsicValue,
+      margin_of_safety: mos,
+      buy_price: aiData.buy_price || (intrinsicValue>0 ? intrinsicValue*0.80 : 0),
+      dcf: dcf,
+      fundamentals: yFund,
+      yahoo_change_pct: yPrice&&yPrice.changePct,
+      yahoo_change: yPrice&&yPrice.change,
+      yahoo_currency: (yPrice&&yPrice.currency)||'USD',
+      yahoo_market_state: yPrice&&yPrice.marketState,
+      moat_score: aiData.moat_score||0,
+      moat_justification: aiData.moat_justification||'',
+      buffett_score: aiData.buffett_score||0,
+      rating: aiData.rating||'AGUARDAR',
+      thesis: aiData.thesis||'',
+      next_earnings: aiData.next_earnings||'',
+      earnings_countdown: aiData.earnings_countdown||'',
+      guidance: aiData.guidance||'',
+      news: aiData.news||[]
+    };
 
     portfolio[idx].data=data;
     portfolio[idx].lastUpdated=new Date().toISOString();
@@ -1473,6 +1544,7 @@ async function fetchStock(ticker){
     if(el3){var b3=el3.querySelector('.pcard-body');if(b3)b3.innerHTML='<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:11px;color:var(--red);font-size:11px;margin:6px">Erro: '+e.message+'</div>';}
   }
 }
+
 
 async function refreshAll(){
   if(!getKey()){alert('Anthropic API Key não configurada. Abre as Definições para configurar.');return;}
