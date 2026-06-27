@@ -954,7 +954,7 @@ async function startScan(){
     setTimeout(function(){var pb2=document.getElementById('phaseBox');if(pb2)pb2.style.display='none';},800);
     renderScanResults();
     updateQuickStats();renderTopTable();refreshDashboardCharts();
-    setTimeout(enrichScanPrices, 1500);
+    // prices already enriched inline in analyzeOne
   }catch(e){
     var er=document.getElementById('scanErr');
     if(er){er.style.display='block';er.textContent='Erro: '+e.message;}
@@ -1023,7 +1023,31 @@ async function analyzeOne(ticker){
     'moat_justification must explain the score in 1 sentence citing the strongest factor or weakness. '+
     'Use training knowledge. Return ONLY JSON: {"ticker":"'+ticker+'","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"moat_justification":"","intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0}';
   var raw=await callGeminiRaw(prompt,false);
-  return parseJSON(raw);
+  var data=parseJSON(raw);
+
+  // Fetch Yahoo fundamentals and apply real DCF
+  try{
+    var yPrice = await fetchYahooPrice(ticker);
+    var yFund = await fetchYahooFundamentals(ticker);
+    if(yPrice && yPrice.price) data.current_price = yPrice.price;
+    if(yFund){
+      if(yFund.roe) data.roe = yFund.roe * 100;
+      if(yFund.netMargin) data.net_margin = yFund.netMargin * 100;
+      if(yFund.pe) data.pe_ratio = yFund.pe;
+      if(yFund.dividendYield) data.dividend_yield = yFund.dividendYield * 100;
+      if(yFund.earningsGrowth) data.eps_growth = yFund.earningsGrowth * 100;
+      var dcf = calcDCF(yFund, ticker);
+      if(dcf && dcf.intrinsicValue > 0){
+        data.intrinsic_value = dcf.intrinsicValue;
+        data.dcf = dcf;
+      }
+      if(data.current_price > 0 && data.intrinsic_value > 0)
+        data.margin_of_safety = ((data.intrinsic_value - data.current_price) / data.intrinsic_value * 100);
+      if(data.intrinsic_value > 0) data.buy_price = data.intrinsic_value * 0.80;
+    }
+  }catch(yErr){ console.warn('Yahoo enrichment failed for '+ticker+':', yErr.message); }
+
+  return data;
 }
 
 function renderScanResults(){
@@ -1234,20 +1258,24 @@ function buildPortCard(s){
       +'<div style="display:flex;gap:2px;">'+(Array.from({length:10},function(_,j){return '<div style="width:8px;height:8px;border-radius:50%;background:'+(j<(d.moat_score||0)?'var(--blue)':'var(--border)')+'"></div>';}).join(''))+'</div>'
       +(d.moat_justification?'<span style="font-size:10px;color:var(--muted);font-style:italic;">— '+d.moat_justification+'</span>':'')
       +'</div>'
+      +(d.dcf?'<div style="margin-top:12px;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;">'        +'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:8px;letter-spacing:.04em;">DCF — VALOR INTRÍNSECO REAL</div>'        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'          +'<div><div style="font-size:9px;color:var(--muted);">FCF crescimento (5a)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.fcfGrowthUsed*100).toFixed(1)+'%/ano</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">WACC</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.wacc*100).toFixed(1)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Crescimento terminal</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.terminalGrowth*100).toFixed(0)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Ajuste dívida líquida</div><div style="font-size:11px;font-weight:700;color:'+(d.dcf.debtAdjusted>0?'var(--red)':'var(--green)')+';">$'+Math.abs(d.dcf.debtAdjusted/1e9).toFixed(1)+'B '+(d.dcf.debtAdjusted>0?'dívida':'caixa')+'</div></div>'        +'</div>'        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'          +'<span style="font-size:10px;color:var(--muted);">Valor intrínseco/ação</span>'          +'<span style="font-size:14px;font-weight:800;color:var(--green);">$'+d.intrinsic_value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'        +'</div>'        +'<div style="font-size:9px;color:var(--muted);margin-top:4px;">Fonte: Yahoo Finance · FCF real · Modelo DCF 10 anos</div>'      +'</div>':'')
     +'</div></div>';
 }
 
-// ── YAHOO FINANCE REAL PRICE ──
-async function fetchYahooPrice(ticker){
-  // Normalize ticker for Yahoo (MU.US -> MU, etc)
-  var yTicker = ticker.replace('.US','').replace('.L','.L').replace('.PA','.PA');
-  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(yTicker)+'?interval=1d&range=1d';
+// ── YAHOO FINANCE REAL PRICE + FUNDAMENTALS + DCF ──
+async function yahooFetch(url){
   var proxy = 'https://api.allorigins.win/get?url='+encodeURIComponent(url);
+  var res = await fetch(proxy, {signal: AbortSignal.timeout(10000)});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  var outer = await res.json();
+  return JSON.parse(outer.contents);
+}
+
+async function fetchYahooPrice(ticker){
+  var yTicker = ticker.replace(/\.US$/,'');
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(yTicker)+'?interval=1d&range=1d';
   try{
-    var res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    var outer = await res.json();
-    var data = JSON.parse(outer.contents);
+    var data = await yahooFetch(url);
     var result = data&&data.chart&&data.chart.result&&data.chart.result[0];
     if(!result) throw new Error('No data');
     var meta = result.meta;
@@ -1266,24 +1294,134 @@ async function fetchYahooPrice(ticker){
   }
 }
 
+async function fetchYahooFundamentals(ticker){
+  var yTicker = ticker.replace(/\.US$/,'');
+  var url = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/'+encodeURIComponent(yTicker)
+    +'?modules=financialData,defaultKeyStatistics,incomeStatementHistory,cashflowStatementHistory,balanceSheetHistory,summaryDetail,earnings';
+  try{
+    var data = await yahooFetch(url);
+    var q = data&&data.quoteSummary&&data.quoteSummary.result&&data.quoteSummary.result[0];
+    if(!q) throw new Error('No fundamentals');
+
+    var fd = q.financialData||{};
+    var ks = q.defaultKeyStatistics||{};
+    var sd = q.summaryDetail||{};
+
+    // Extract key values
+    var fcf = fd.freeCashflow&&fd.freeCashflow.raw;
+    var revenue = fd.totalRevenue&&fd.totalRevenue.raw;
+    var netIncome = fd.netIncomeToCommon&&fd.netIncomeToCommon.raw;
+    var totalDebt = fd.totalDebt&&fd.totalDebt.raw;
+    var cash = fd.totalCash&&fd.totalCash.raw;
+    var sharesOut = ks.sharesOutstanding&&ks.sharesOutstanding.raw;
+    var beta = ks.beta&&ks.beta.raw;
+    var pe = fd.currentPrice&&fd.trailingEps&&fd.trailingEps.raw ? (fd.currentPrice.raw / fd.trailingEps.raw) : null;
+    var eps = fd.trailingEps&&fd.trailingEps.raw || ks.trailingEps&&ks.trailingEps.raw;
+    var roe = fd.returnOnEquity&&fd.returnOnEquity.raw;
+    var netMargin = fd.profitMargins&&fd.profitMargins.raw;
+    var revenueGrowth = fd.revenueGrowth&&fd.revenueGrowth.raw;
+    var earningsGrowth = fd.earningsGrowth&&fd.earningsGrowth.raw;
+    var dividendYield = sd.dividendYield&&sd.dividendYield.raw;
+    var currentPrice = fd.currentPrice&&fd.currentPrice.raw;
+
+    // Get historical FCF for growth calc
+    var cfHistory = q.cashflowStatementHistory&&q.cashflowStatementHistory.cashflowStatements||[];
+    var fcfHistory = cfHistory.map(function(s){
+      var op = s.totalCashFromOperatingActivities&&s.totalCashFromOperatingActivities.raw||0;
+      var capex = s.capitalExpenditures&&s.capitalExpenditures.raw||0;
+      return op + capex; // capex is negative
+    }).filter(function(v){return v>0;});
+
+    // Calculate FCF growth rate from history
+    var fcfGrowth = 0.08; // default 8%
+    if(fcfHistory.length >= 2){
+      var oldest = fcfHistory[fcfHistory.length-1];
+      var newest = fcfHistory[0];
+      if(oldest>0 && newest>0){
+        fcfGrowth = Math.pow(newest/oldest, 1/(fcfHistory.length-1)) - 1;
+        fcfGrowth = Math.max(-0.05, Math.min(0.25, fcfGrowth)); // cap -5% to 25%
+      }
+    }
+    if(earningsGrowth) fcfGrowth = (fcfGrowth + earningsGrowth) / 2; // blend
+
+    return {
+      fcf, revenue, netIncome, totalDebt, cash, sharesOut,
+      beta: beta||1, pe, eps, roe, netMargin, revenueGrowth,
+      earningsGrowth, dividendYield, currentPrice, fcfGrowth,
+      fcfHistory
+    };
+  }catch(e){
+    console.warn('Yahoo fundamentals failed for '+ticker+':', e.message);
+    return null;
+  }
+}
+
+function calcDCF(fundamentals, ticker){
+  if(!fundamentals||!fundamentals.fcf||!fundamentals.sharesOut) return null;
+
+  var fcf = fundamentals.fcf;
+  var shares = fundamentals.sharesOut;
+  var beta = fundamentals.beta||1;
+  var debt = fundamentals.totalDebt||0;
+  var cash = fundamentals.cash||0;
+  var growth1 = fundamentals.fcfGrowth; // years 1-5
+  var growth2 = growth1 * 0.6;          // years 6-10 (deceleration)
+  var terminalGrowth = 0.03;            // 3% terminal
+  // WACC: risk-free 4.5% + beta * equity risk premium 5.5%
+  var wacc = 0.045 + beta * 0.055;
+  wacc = Math.max(0.08, Math.min(0.15, wacc));
+
+  // DCF: 10 years of FCF projections
+  var pv = 0;
+  var fcfT = fcf;
+  for(var yr=1; yr<=10; yr++){
+    var g = yr<=5 ? growth1 : growth2;
+    fcfT = fcfT * (1 + g);
+    pv += fcfT / Math.pow(1+wacc, yr);
+  }
+
+  // Terminal value (Gordon Growth)
+  var terminalFCF = fcfT * (1 + terminalGrowth);
+  var terminalValue = terminalFCF / (wacc - terminalGrowth);
+  var pvTerminal = terminalValue / Math.pow(1+wacc, 10);
+
+  // Enterprise Value → Equity Value
+  var enterpriseValue = pv + pvTerminal;
+  var equityValue = enterpriseValue - debt + cash;
+  var intrinsicPerShare = equityValue / shares;
+
+  return {
+    intrinsicValue: Math.max(0, intrinsicPerShare),
+    wacc: wacc,
+    fcfGrowthUsed: growth1,
+    terminalGrowth: terminalGrowth,
+    pvFCF: pv,
+    pvTerminal: pvTerminal,
+    enterpriseValue: enterpriseValue,
+    debtAdjusted: debt - cash,
+    dcfMethod: true
+  };
+}
+
 async function fetchStock(ticker){
   var idx=portfolio.findIndex(function(s){return s.ticker===ticker;});
   if(idx===-1)return;
   var cardEl=document.getElementById('pc-'+ticker);
   if(cardEl){var b=cardEl.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A analisar '+ticker+'...</div></div>';}
 
-  // Fetch real price from Yahoo Finance in parallel with AI analysis
-  var yahooPromise = fetchYahooPrice(ticker);
+  // Fetch real price + fundamentals from Yahoo Finance in parallel with AI analysis
+  var yahooPromise = Promise.all([fetchYahooPrice(ticker), fetchYahooFundamentals(ticker)]);
 
-  var prompt='Analyze '+ticker+' as Warren Buffett investor. Do NOT estimate current_price (will be filled with real data). '+
+  var prompt='Analyze '+ticker+' as Warren Buffett investor. Do NOT estimate current_price or intrinsic_value (will be calculated with real DCF data). '+
     'For moat_score (0-10), calculate objectively: '+
     '(1) ROE 5yr avg>15%=+2; (2) Gross margin>40% stable=+2; (3) ROIC>WACC=+2; (4) Pricing power=+2; (5) Market dominance/switching costs/network effect=+2. '+
-    'moat_justification: 1 sentence citing the key factor determining the score. '+
+    'moat_justification: 1 sentence on the key moat factor. '+
     'Return ONLY this JSON: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":""}';
   try{
     var results = await Promise.all([callGeminiRaw(prompt,false), yahooPromise]);
     var data = parseJSON(results[0]);
-    var yahoo = results[1];
+    var yahoo = results[1][0];
+    var fundamentals = results[1][1];
 
     // Override with real Yahoo Finance price
     if(yahoo && yahoo.price){
@@ -1294,11 +1432,34 @@ async function fetchStock(ticker){
       data.yahoo_prev_close = yahoo.previousClose;
       data.yahoo_market_state = yahoo.marketState;
       if(yahoo.name && !data.company_name) data.company_name = yahoo.name;
-      // Recalculate margin of safety with real price
-      if(data.intrinsic_value && data.intrinsic_value > 0){
-        data.margin_of_safety = ((data.intrinsic_value - data.current_price) / data.intrinsic_value * 100);
-      }
     }
+
+    // Override fundamentals with real Yahoo data
+    if(fundamentals){
+      if(fundamentals.roe) data.roe = fundamentals.roe * 100;
+      if(fundamentals.netMargin) data.net_margin = fundamentals.netMargin * 100;
+      if(fundamentals.pe) data.pe_ratio = fundamentals.pe;
+      if(fundamentals.dividendYield) data.dividend_yield = fundamentals.dividendYield * 100;
+      if(fundamentals.earningsGrowth) data.eps_growth = fundamentals.earningsGrowth * 100;
+      if(fundamentals.totalDebt && fundamentals.fcf && fundamentals.fcf>0)
+        data.debt_years = fundamentals.totalDebt / fundamentals.fcf;
+      data.fundamentals = fundamentals;
+    }
+
+    // Calculate DCF intrinsic value with real data
+    var dcf = calcDCF(fundamentals, ticker);
+    if(dcf && dcf.intrinsicValue > 0){
+      data.intrinsic_value = dcf.intrinsicValue;
+      data.dcf = dcf;
+    }
+
+    // Recalculate margin of safety with real price + real DCF
+    if(data.current_price > 0 && data.intrinsic_value > 0){
+      data.margin_of_safety = ((data.intrinsic_value - data.current_price) / data.intrinsic_value * 100);
+    }
+
+    // Update buy_price suggestion (20% discount to intrinsic)
+    if(data.intrinsic_value > 0) data.buy_price = data.intrinsic_value * 0.80;
 
     portfolio[idx].data=data;
     portfolio[idx].lastUpdated=new Date().toISOString();
