@@ -658,8 +658,8 @@ async function saveSettingsKey(){
 function goTab(t){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(x){x.classList.remove('active');});
-  document.getElementById('page-'+t).classList.add('active');
-  document.getElementById('tab-'+t).classList.add('active');
+  var page=document.getElementById('page-'+t);if(page)page.classList.add('active');
+  var tab=document.getElementById('tab-'+t);if(tab)tab.classList.add('active');
   if(t==='portfolio')renderPortfolio();
   if(t==='dashboard')refreshDashboardCharts();
 }
@@ -869,17 +869,27 @@ function renderIndices(data){
   function fp(v){if(v==null)return{str:'—',cls:'c-flat'};return{str:(v>0?'+':'')+v.toFixed(2)+'%',cls:v>0?'c-up':v<0?'c-dn':'c-flat'};}
   var months=data&&data.months||[];
   var mlabels=months.map(function(m){var p=m.split('-');return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(p[1])-1];});
-  function buildIdx(cls,name,tick,d,chartId,color){
+  function buildIdx(cls,name,tick,d,chartId){
     var w=fp(d&&d.weekly),mo=fp(d&&d.monthly),y=fp(d&&d.yearly),ytd=fp(d&&d.ytd);
     return '<div class="idx-card '+cls+'">'      +'<button class="idx-refresh-btn" onclick="loadIndices()">Atualizar</button>'      +'<div class="idx-name">'+name+' <span style="font-family:JetBrains Mono,monospace;font-size:10px">'+tick+'</span></div>'      +'<div class="idx-val">'+fv(d&&d.value)+'</div>'      +'<div class="idx-periods">'        +'<div class="idx-period"><div class="idx-p-label">Semanal</div><div class="idx-p-val '+w.cls+'">'+w.str+'</div></div>'        +'<div class="idx-period"><div class="idx-p-label">Mensal</div><div class="idx-p-val '+mo.cls+'">'+mo.str+'</div></div>'        +'<div class="idx-period"><div class="idx-p-label">Anual</div><div class="idx-p-val '+y.cls+'">'+y.str+'</div></div>'      +'</div>'      +'<div class="idx-ytd">YTD: <span class="'+ytd.cls+'" style="font-weight:700">'+ytd.str+'</span></div>'      +(d&&d.history&&d.history.length        ?'<div style="margin-top:14px;"><div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;">VARIAÇÃO 12 MESES</div><div style="position:relative;height:70px;"><canvas id="'+chartId+'" height="70"></canvas></div></div>'        :'')      +'</div>';
   }
   var grid=document.getElementById('indicesGrid');
-  if(grid)grid.innerHTML=buildIdx('idx-sp','S&P 500','^GSPC',data&&data.sp500,'idxChart_sp','#1a56db')+buildIdx('idx-nq','Nasdaq','^IXIC',data&&data.nasdaq,'idxChart_nq','#7c3aed')+buildIdx('idx-dj','Dow Jones','^DJI',data&&data.dowjones,'idxChart_dj','#0891b2');
+  if(grid)grid.innerHTML=buildIdx('idx-sp','S&P 500','^GSPC',data&&data.sp500,'idxChart_sp')+buildIdx('idx-nq','Nasdaq','^IXIC',data&&data.nasdaq,'idxChart_nq')+buildIdx('idx-dj','Dow Jones','^DJI',data&&data.dowjones,'idxChart_dj');
+  // Market strip (VIX, oil, gold, btc)
+  var strip=document.getElementById('marketStrip');
+  if(!strip){
+    strip=document.createElement('div');strip.id='marketStrip';strip.className='market-strip';
+    var ig=document.getElementById('indicesGrid');if(ig)ig.parentNode.insertBefore(strip,ig.nextSibling);
+  }
+  if(data&&strip){
+    strip.innerHTML='<div class="mstrip-item"><div><div class="mstrip-label">VIX</div><div class="mstrip-val" style="color:'+(data.vix>25?'var(--red)':data.vix>15?'var(--amber)':'var(--green)')+'">'+(+(data.vix||0).toFixed(1))+'</div></div></div>'      +'<div class="mstrip-item"><div><div class="mstrip-label">Petroleo WTI</div><div class="mstrip-val">$'+((data.oil||0).toFixed(1))+'</div></div></div>'      +'<div class="mstrip-item"><div><div class="mstrip-label">Ouro</div><div class="mstrip-val">$'+Math.round(data.gold||0).toLocaleString('pt-PT')+'</div></div></div>'      +'<div class="mstrip-item"><div><div class="mstrip-label">Bitcoin</div><div class="mstrip-val">$'+Math.round(data.btc||0).toLocaleString('pt-PT')+'</div></div></div>';
+  }
+  // Draw sparkline charts
   setTimeout(function(){
     function drawIdxChart(canvasId,history,color){
       var canvas=document.getElementById(canvasId);
       if(!canvas||!history||!history.length)return;
-      var existing=Chart.getChart(canvas);if(existing)existing.destroy();
+      try{var existing=Chart.getChart(canvas);if(existing)existing.destroy();}catch(e){}
       var gradColor=(history[history.length-1]>=history[0])?color:'#dc2626';
       new Chart(canvas,{
         type:'line',
@@ -907,6 +917,7 @@ function renderIndices(data){
       if(data.dowjones&&data.dowjones.history)drawIdxChart('idxChart_dj',data.dowjones.history,'#0891b2');
     }
   },150);
+}
 
 // ── SCANNER ──
 async function startScan(){
@@ -948,9 +959,11 @@ async function startScan(){
     if(er){er.style.display='block';er.textContent='Erro: '+e.message;}
     var pb3=document.getElementById('phaseBox');if(pb3)pb3.style.display='none';
     var pp=document.getElementById('scanProgressPanel');if(pp)pp.style.display='none';
+  }finally{
+    ['dashScanBtn','dashScanBtnTop'].forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=false;b.textContent='▶ Analisar Agora';}});
+    var pp2=document.getElementById('scanProgressPanel');if(pp2)pp2.style.display='none';
+    scheduleNextScan();
   }
-  ['dashScanBtn','dashScanBtnTop'].forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=false;b.textContent='▶ Analisar Agora';}});
-  scheduleNextScan();
 }
 
 async function phase1(){
@@ -1356,13 +1369,7 @@ async function initApp(){
   scheduleNextScan();
   updateNextScanDisplay();
   setInterval(updateNextScanDisplay, 60000);
-  // Auto-trigger if no scan today and it's past 09:00
-  var lastScanDate = lastScan && lastScan.date ? new Date(lastScan.date) : null;
-  var todayStr = new Date().toDateString();
-  if(getKey() && (!lastScanDate || lastScanDate.toDateString() !== todayStr) && new Date().getHours() >= 9){
-    console.log('Auto-scan: no scan today past 09:00, triggering...');
-    setTimeout(startScan, 4000);
-  }
+  // Auto-scan scheduled at 09:00 via scheduleNextScan timer
 }
 
 function showLoadingOverlay(show){
