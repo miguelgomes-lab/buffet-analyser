@@ -954,6 +954,7 @@ async function startScan(){
     setTimeout(function(){var pb2=document.getElementById('phaseBox');if(pb2)pb2.style.display='none';},800);
     renderScanResults();
     updateQuickStats();renderTopTable();refreshDashboardCharts();
+    setTimeout(enrichScanPrices, 1500);
   }catch(e){
     var er=document.getElementById('scanErr');
     if(er){er.style.display='block';er.textContent='Erro: '+e.message;}
@@ -1198,6 +1199,7 @@ function buildPortCard(s){
   var _sym2=s.currency==='EUR'?'€':'$';
   if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name" style="color:var(--muted)">Sem dados</div></div><div class="pc-btns"><button class="pc-btn pc-btn-r" onclick="fetchStock(\''+s.ticker+'\')">Analisar</button><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Preco de compra: '+(s.buyPrice?_sym2+s.buyPrice.toFixed(2):'—')+'</div><button onclick="fetchStock(\''+s.ticker+'\''+')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Claude</button></div></div></div>';
   var pnl=s.buyPrice&&d.current_price?((d.current_price-s.buyPrice)/s.buyPrice*100):null;
+  var pnlAbs=s.buyPrice&&d.current_price&&s.shares?((d.current_price-s.buyPrice)*s.shares):null;
   var pnlStr=pnl!=null?(pnl>0?'+':'')+pnl.toFixed(2)+'%':'—';
   var pnlC=pnl>0?'var(--green)':pnl<0?'var(--red)':'var(--muted)';
   var mosC=d.margin_of_safety>=30?'var(--green)':d.margin_of_safety>=15?'var(--amber)':'var(--red)';
@@ -1213,7 +1215,7 @@ function buildPortCard(s){
     +'</div>'
     +'<div class="pcard-body">'
       +'<div class="pgrid4">'
-        +'<div class="pi"><div class="pi-label">Atual (USD)</div><div class="pi-value c-blue">$'+(d.current_price?d.current_price.toFixed(2):'—')+'</div></div>'
+        +'<div class="pi"><div class="pi-label">Atual '+(d.yahoo_currency||'USD')+(d.yahoo_market_state&&d.yahoo_market_state!=='REGULAR'?' <span style="font-size:8px;background:#f0f4ff;color:#6b84a8;padding:1px 4px;border-radius:3px;">'+d.yahoo_market_state+'</span>':'')+'</div>'      +'<div class="pi-value c-blue">$'+(d.current_price?d.current_price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</div>'      +(d.yahoo_change_pct!=null?'<div style="font-size:10px;font-weight:600;color:'+(d.yahoo_change_pct>=0?'var(--green)':'var(--red)')+';">'+(d.yahoo_change_pct>=0?'+':'')+d.yahoo_change_pct.toFixed(2)+'% hoje <span style="font-size:9px;background:#e8f5e9;color:#15803d;padding:1px 5px;border-radius:3px;">Yahoo Finance</span></div>':'')      +'</div>'
         +'<div class="pi"><div class="pi-label">Meu Preco ('+cur+')</div><div class="pi-value">'+(s.buyPrice?sym+s.buyPrice.toFixed(2):'—')+'</div></div>'
         +'<div class="pi"><div class="pi-label">P&amp;L</div><div class="pi-value" style="color:'+pnlC+'">'+pnlStr+'</div></div>'
         +'<div class="pi"><div class="pi-label">Score</div><div class="pi-value" style="color:'+(d.buffett_score>=65?'var(--green)':d.buffett_score>=40?'var(--amber)':'var(--red)')+'">'+(d.buffett_score||'—')+'</div></div>'
@@ -1235,23 +1237,73 @@ function buildPortCard(s){
     +'</div></div>';
 }
 
+// ── YAHOO FINANCE REAL PRICE ──
+async function fetchYahooPrice(ticker){
+  // Normalize ticker for Yahoo (MU.US -> MU, etc)
+  var yTicker = ticker.replace('.US','').replace('.L','.L').replace('.PA','.PA');
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(yTicker)+'?interval=1d&range=1d';
+  var proxy = 'https://api.allorigins.win/get?url='+encodeURIComponent(url);
+  try{
+    var res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var outer = await res.json();
+    var data = JSON.parse(outer.contents);
+    var result = data&&data.chart&&data.chart.result&&data.chart.result[0];
+    if(!result) throw new Error('No data');
+    var meta = result.meta;
+    return {
+      price: meta.regularMarketPrice || meta.previousClose,
+      currency: meta.currency || 'USD',
+      previousClose: meta.previousClose,
+      change: meta.regularMarketPrice - meta.previousClose,
+      changePct: ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose * 100),
+      marketState: meta.marketState,
+      name: meta.longName || meta.shortName || ticker
+    };
+  }catch(e){
+    console.warn('Yahoo price failed for '+ticker+':', e.message);
+    return null;
+  }
+}
+
 async function fetchStock(ticker){
   var idx=portfolio.findIndex(function(s){return s.ticker===ticker;});
   if(idx===-1)return;
   var cardEl=document.getElementById('pc-'+ticker);
   if(cardEl){var b=cardEl.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A analisar '+ticker+'...</div></div>';}
-  // No Google Search - use model knowledge only (much faster, no timeouts)
-  var prompt='Analyze '+ticker+' as Warren Buffett investor. '+
+
+  // Fetch real price from Yahoo Finance in parallel with AI analysis
+  var yahooPromise = fetchYahooPrice(ticker);
+
+  var prompt='Analyze '+ticker+' as Warren Buffett investor. Do NOT estimate current_price (will be filled with real data). '+
     'For moat_score (0-10), calculate objectively: '+
     '(1) ROE 5yr avg>15%=+2; (2) Gross margin>40% stable=+2; (3) ROIC>WACC=+2; (4) Pricing power=+2; (5) Market dominance/switching costs/network effect=+2. '+
     'moat_justification: 1 sentence citing the key factor determining the score. '+
-    'Return ONLY this JSON with real values: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":""}';
+    'Return ONLY this JSON: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":""}';
   try{
-    var raw=await callGeminiRaw(prompt,false);
-    var data=parseJSON(raw);
+    var results = await Promise.all([callGeminiRaw(prompt,false), yahooPromise]);
+    var data = parseJSON(results[0]);
+    var yahoo = results[1];
+
+    // Override with real Yahoo Finance price
+    if(yahoo && yahoo.price){
+      data.current_price = yahoo.price;
+      data.yahoo_currency = yahoo.currency;
+      data.yahoo_change = yahoo.change;
+      data.yahoo_change_pct = yahoo.changePct;
+      data.yahoo_prev_close = yahoo.previousClose;
+      data.yahoo_market_state = yahoo.marketState;
+      if(yahoo.name && !data.company_name) data.company_name = yahoo.name;
+      // Recalculate margin of safety with real price
+      if(data.intrinsic_value && data.intrinsic_value > 0){
+        data.margin_of_safety = ((data.intrinsic_value - data.current_price) / data.intrinsic_value * 100);
+      }
+    }
+
     portfolio[idx].data=data;
     portfolio[idx].lastUpdated=new Date().toISOString();
     LS.s(K.port,portfolio);
+    if(window.DB) window.DB.save(K.port, portfolio);
     var html=buildPortCard(portfolio[idx]);
     var el2=document.getElementById('pc-'+ticker);
     if(el2){var tmp=document.createElement('div');tmp.innerHTML=html;if(tmp.firstElementChild)el2.replaceWith(tmp.firstElementChild);}
@@ -1262,7 +1314,7 @@ async function fetchStock(ticker){
 }
 
 async function refreshAll(){
-  if(!getKey()){alert('Anthropic API Key não configurada. Contacta o administrador.');return;}
+  if(!getKey()){alert('Anthropic API Key não configurada. Abre as Definições para configurar.');return;}
   var btn=document.getElementById('refreshAllBtn');
   if(btn){btn.disabled=true;btn.textContent='A atualizar...';}
   // Refresh sequentially to avoid rate limits
@@ -1270,6 +1322,33 @@ async function refreshAll(){
     await fetchStock(portfolio[i].ticker);
   }
   if(btn){btn.disabled=false;btn.textContent='Atualizar Tudo';}
+}
+
+// Enrich scan results with real Yahoo prices (batch, non-blocking)
+async function enrichScanPrices(){
+  if(!scanResults.length)return;
+  var batch = scanResults.slice(0,50);
+  var updated = 0;
+  // Fetch in groups of 5 to avoid overloading
+  for(var i=0;i<batch.length;i+=5){
+    var group = batch.slice(i,i+5);
+    var prices = await Promise.all(group.map(function(r){ return fetchYahooPrice(r.ticker); }));
+    group.forEach(function(r,j){
+      var yp = prices[j];
+      if(yp && yp.price){
+        r.current_price = yp.price;
+        r.yahoo_change_pct = yp.changePct;
+        if(r.intrinsic_value && r.intrinsic_value > 0){
+          r.margin_of_safety = ((r.intrinsic_value - yp.price) / r.intrinsic_value * 100);
+        }
+        updated++;
+      }
+    });
+    // Update table progressively
+    renderTopTable();
+  }
+  console.log('Yahoo prices enriched for', updated, 'scan results');
+  if(lastScan){ lastScan.results = scanResults; LS.s(K.scan, lastScan); }
 }
 
 // ── AUTO SCAN SCHEDULER ──
