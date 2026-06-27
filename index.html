@@ -943,15 +943,25 @@ function renderPortfolio(){
     return;
   }
   if(empty)empty.style.display='none';
+  // Remove cards for deleted stocks
+  var existing=grid.querySelectorAll('[id^="pc-"]');
+  existing.forEach(function(el){
+    var t=el.id.replace('pc-','');
+    if(!portfolio.find(function(s){return s.ticker===t;}))el.remove();
+  });
+  // Add/update cards
   portfolio.forEach(function(s){
-    var existing=document.getElementById('pc-'+s.ticker);
+    var existingCard=document.getElementById('pc-'+s.ticker);
     var html=buildPortCard(s);
-    if(!existing){
+    if(!existingCard){
       var el=document.createElement('div');el.innerHTML=html;
       if(el.firstElementChild)grid.appendChild(el.firstElementChild);
-    } else if(s.data&&existing.querySelector('.spin')){
-      var tmp=document.createElement('div');tmp.innerHTML=html;
-      if(tmp.firstElementChild)existing.replaceWith(tmp.firstElementChild);
+    } else {
+      // Only replace if we have new data (not if it's spinning)
+      if(s.data){
+        var tmp=document.createElement('div');tmp.innerHTML=html;
+        if(tmp.firstElementChild)existingCard.replaceWith(tmp.firstElementChild);
+      }
     }
   });
 }
@@ -961,7 +971,7 @@ function buildPortCard(s){
   var sym=s.currency==='EUR'?'€':'$';
   var cur=s.currency||'USD';
   var upd=s.lastUpdated?new Date(s.lastUpdated).toLocaleDateString('pt-PT'):'';
-  if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name">A carregar...</div></div><div class="pc-btns"><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A pesquisar com Gemini...</div></div></div></div>';
+  if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name" style="color:var(--muted)">Sem dados</div></div><div class="pc-btns"><button class="pc-btn pc-btn-r" onclick="fetchStock(\''+s.ticker+'\')">Analisar</button><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Preco de compra: '+(s.buyPrice?( s.currency==='EUR'?'€':'$')+s.buyPrice.toFixed(2):'—')+'</div><button onclick="fetchStock(\''+s.ticker+'\''+')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Gemini</button></div></div></div>';
   var pnl=s.buyPrice&&d.current_price?((d.current_price-s.buyPrice)/s.buyPrice*100):null;
   var pnlStr=pnl!=null?(pnl>0?'+':'')+pnl.toFixed(2)+'%':'—';
   var pnlC=pnl>0?'var(--green)':pnl<0?'var(--red)':'var(--muted)';
