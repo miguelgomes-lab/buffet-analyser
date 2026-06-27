@@ -460,7 +460,7 @@ async function callGeminiRaw(prompt,useSearch){
   }
   var body={
     contents:[{parts:[{text:prompt}]}],
-    generationConfig:{temperature:0.1,maxOutputTokens:4096}
+    generationConfig:{temperature:0.1,maxOutputTokens:2048}
   };
   if(useSearch){
     body.tools=[{googleSearch:{}}];
@@ -971,7 +971,8 @@ function buildPortCard(s){
   var sym=s.currency==='EUR'?'€':'$';
   var cur=s.currency||'USD';
   var upd=s.lastUpdated?new Date(s.lastUpdated).toLocaleDateString('pt-PT'):'';
-  if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name" style="color:var(--muted)">Sem dados</div></div><div class="pc-btns"><button class="pc-btn pc-btn-r" onclick="fetchStock(\''+s.ticker+'\')">Analisar</button><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Preco de compra: '+(s.buyPrice?( s.currency==='EUR'?'€':'$')+s.buyPrice.toFixed(2):'—')+'</div><button onclick="fetchStock(\''+s.ticker+'\''+')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Gemini</button></div></div></div>';
+  var _sym2=s.currency==='EUR'?'€':'$';
+  if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name" style="color:var(--muted)">Sem dados</div></div><div class="pc-btns"><button class="pc-btn pc-btn-r" onclick="fetchStock(\''+s.ticker+'\')">Analisar</button><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Preco de compra: '+(s.buyPrice?_sym2+s.buyPrice.toFixed(2):'—')+'</div><button onclick="fetchStock(\''+s.ticker+'\''+')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Gemini</button></div></div></div>';
   var pnl=s.buyPrice&&d.current_price?((d.current_price-s.buyPrice)/s.buyPrice*100):null;
   var pnlStr=pnl!=null?(pnl>0?'+':'')+pnl.toFixed(2)+'%':'—';
   var pnlC=pnl>0?'var(--green)':pnl<0?'var(--red)':'var(--muted)';
@@ -1011,7 +1012,7 @@ async function fetchStock(ticker){
   var cardEl=document.getElementById('pc-'+ticker);
   if(cardEl){var b=cardEl.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A analisar '+ticker+'...</div></div>';}
   // No Google Search - use model knowledge only (much faster, no timeouts)
-  var prompt='You are a financial analyst. Analyze stock '+ticker+' using Warren Buffett method. Use your training data for all fundamentals. For current price use your most recent knowledge. Return ONLY valid JSON: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"Q3 2025","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":"","data_quality":"media"} Rules: margin_of_safety=(intrinsic-current_price)/intrinsic*100; rating=COMPRAR if MoS>25 AND buffett_score>65 AND debt_years<5, EVITAR if buffett_score<35 OR debt_years>8, else AGUARDAR; buy_price=intrinsic*0.70; thesis=2 sentences European Portuguese; buffett_score=ROE(20%)+net_margin(15%)+eps_growth(15%)+moat_score(20%)+margin_of_safety(20%)+debt(10%).';
+  var prompt='Analyze '+ticker+' as Warren Buffett investor. Return ONLY this JSON with real values: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":""}';
   try{
     var raw=await callGeminiRaw(prompt,false);
     var data=parseJSON(raw);
