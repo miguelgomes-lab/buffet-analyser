@@ -936,34 +936,37 @@ function removeStock(ticker){
 
 function renderPortfolio(){
   var grid=document.getElementById('portGrid');
+  if(!grid)return;
   var empty=document.getElementById('portEmpty');
   if(!portfolio.length){
-    grid.innerHTML='';
-    if(empty){grid.appendChild(empty);empty.style.display='block';}
+    // Clear all cards and show empty state
+    var cards=grid.querySelectorAll('[id^="pc-"]');
+    cards.forEach(function(c){c.remove();});
+    if(empty){empty.style.display='block';grid.insertBefore(empty,grid.firstChild);}
     return;
   }
   if(empty)empty.style.display='none';
-  // Remove cards for deleted stocks
+  // Remove cards for stocks no longer in portfolio
   var existing=grid.querySelectorAll('[id^="pc-"]');
   existing.forEach(function(el){
     var t=el.id.replace('pc-','');
     if(!portfolio.find(function(s){return s.ticker===t;}))el.remove();
   });
-  // Add/update cards
+  // Add/update each stock card
   portfolio.forEach(function(s){
     var existingCard=document.getElementById('pc-'+s.ticker);
     var html=buildPortCard(s);
     if(!existingCard){
-      var el=document.createElement('div');el.innerHTML=html;
+      var el=document.createElement('div');
+      el.innerHTML=html;
       if(el.firstElementChild)grid.appendChild(el.firstElementChild);
-    } else {
-      // Only replace if we have new data (not if it's spinning)
-      if(s.data){
-        var tmp=document.createElement('div');tmp.innerHTML=html;
-        if(tmp.firstElementChild)existingCard.replaceWith(tmp.firstElementChild);
-      }
+    } else if(s.data){
+      // Update existing card if we have data
+      var tmp=document.createElement('div');tmp.innerHTML=html;
+      if(tmp.firstElementChild)existingCard.replaceWith(tmp.firstElementChild);
     }
   });
+  console.log('Portfolio rendered:', portfolio.length, 'stocks');
 }
 
 function buildPortCard(s){
@@ -1093,10 +1096,11 @@ async function initApp(){
     var sbtn=document.getElementById('scanBtn');if(sbtn)sbtn.textContent='Reanalisar';
   }
 
-  // Init UI with restored data
+  // Init UI with restored data - renderPortfolio AFTER Firebase data is in portfolio
   initDashboard();
   renderPortfolio();
   showLoadingOverlay(false);
+  console.log('App ready. Portfolio:', portfolio.length, 'stocks');
 }
 
 function showLoadingOverlay(show){
@@ -1114,7 +1118,10 @@ function showLoadingOverlay(show){
 function waitForDB(retries){
   if(window.DB){initApp();}
   else if(retries>0){setTimeout(function(){waitForDB(retries-1);},150);}
-  else{initApp();}
+  else{
+    console.warn('Firebase not available, using localStorage only');
+    initApp();
+  }
 }
 waitForDB(20);
 
