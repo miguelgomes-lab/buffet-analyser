@@ -336,7 +336,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAAZQxifNFbzmsc9pTiiiS56KHdd0owtJ0",
@@ -376,29 +376,15 @@ const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 window.AUTH = {
   async loginGoogle(){
     const provider = new GoogleAuthProvider();
-    try{
-      if(isMobile){
-        sessionStorage.setItem('bfa_redirect_pending','1');
-        await signInWithRedirect(auth, provider);
-      } else {
-        await signInWithPopup(auth, provider);
-      }
-    }
-    catch(e){ sessionStorage.removeItem('bfa_redirect_pending'); console.error('Google login error:', e.message); alert('Erro ao entrar com Google: ' + e.message); }
+    try{ await signInWithPopup(auth, provider); }
+    catch(e){ console.error('Google login error:', e.message); alert('Erro ao entrar com Google: ' + e.message); }
   },
   async loginApple(){
     const provider = new OAuthProvider('apple.com');
     provider.addScope('name');
     provider.addScope('email');
-    try{
-      if(isMobile){
-        sessionStorage.setItem('bfa_redirect_pending','1');
-        await signInWithRedirect(auth, provider);
-      } else {
-        await signInWithPopup(auth, provider);
-      }
-    }
-    catch(e){ sessionStorage.removeItem('bfa_redirect_pending'); console.error('Apple login error:', e.message); alert('Erro ao entrar com Apple: ' + e.message); }
+    try{ await signInWithPopup(auth, provider); }
+    catch(e){ console.error('Apple login error:', e.message); alert('Erro ao entrar com Apple: ' + e.message); }
   },
   async logout(){
     await signOut(auth);
@@ -420,28 +406,8 @@ function showUser(user){
   if(window._appReady){ window.initApp(); } else { window._pendingInit = true; }
 }
 
-async function initAuth(){
-  const pending = sessionStorage.getItem('bfa_redirect_pending');
-
-  if(pending){
-    // Coming back from redirect — show loading, not login
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('loadingAuth').style.display = 'flex';
-    sessionStorage.removeItem('bfa_redirect_pending');
-    try{
-      const result = await getRedirectResult(auth);
-      if(result && result.user){
-        showUser(result.user);
-        return;
-      }
-    }catch(e){
-      console.error('Redirect result error:', e.message);
-    }
-  }
-
-  // Normal auth state listener
+function initAuth(){
   onAuthStateChanged(auth, function(user){
-    document.getElementById('loadingAuth').style.display = 'none';
     if(user){
       showUser(user);
     } else {
