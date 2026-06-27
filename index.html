@@ -323,10 +323,16 @@ function goTab(t){
 
 // GEMINI 
 async function callGemini(prompt,useSearch=false){
+  const raw=await callGeminiRaw(prompt,useSearch);
+  if(!raw)throw new Error('Resposta vazia');
+  return parseGeminiJSON(raw);
+}
+
+async function callGeminiRaw(prompt,useSearch=false){
   const key=getKey();
   const body={
     contents:[{parts:[{text:prompt}]}],
-    generationConfig:{temperature:0.1,maxOutputTokens:2048}
+    generationConfig:{temperature:0.1,maxOutputTokens:4096}
   };
   if(useSearch){
     body.tools=[{googleSearch:{}}];
@@ -338,9 +344,7 @@ async function callGemini(prompt,useSearch=false){
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'Gemini error '+res.status);}
   const data=await res.json();
-  const raw=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
-  if(!raw)throw new Error('Resposta vazia');
-  return parseGeminiJSON(raw);
+  return (data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
 }
 
 function parseGeminiJSON(raw){
@@ -534,7 +538,7 @@ async function startScan(){
  const btn=document.getElementById('scanBtn');
  btn.disabled=true;
  
- document.getElementById('scanBtnTxt').textContent='A analisar...';
+ const sb=document.getElementById('scanBtn'); if(sb){sb.textContent='A analisar...';sb.disabled=true;}
  document.getElementById('scanErr').style.display='none';
  document.getElementById('rankGrid').innerHTML='';
  document.getElementById('chartsRow').style.display='none';
@@ -576,28 +580,57 @@ async function startScan(){
  }
  btn.disabled=false;
  
- document.getElementById('scanBtn').textContent='Reanalisar';
+ const sb=document.getElementById('scanBtn');if(sb){sb.textContent='Reanalisar';sb.disabled=false;}
 }
 async function phase1(tickers){
- const d=await callGemini(`És especialista Buffett. De ${tickers.length} ações seleciona as 40 com maior potencial: ROE>15%, margens fortes, moat durável, EPS crescente, balanço sólido. Lista: ${tickers.join(',')} Responde APENAS JSON: {"top40":["T1","T2",...]}`,false);
- return(d.top40||[]).filter(t=>ALL_T.includes(t)).slice(0,40);
+  const d=await callGemini(`You are a Warren Buffett investment expert. From the ${tickers.length} stocks below, select the 40 with HIGHEST Buffett potential: consistent ROE>15%, strong margins, durable moat, steady EPS growth, low debt, understandable business.
+List: ${tickers.join(',')}
+Respond ONLY with valid JSON: {"top40":["TICK1","TICK2",...]} — exactly 40 tickers from the list.`,false);
+  const arr=(d.top40||d.Top40||[]);
+  return arr.filter(t=>ALL_T.includes(t.toUpperCase())).slice(0,40);
 }
 async function phase2(tickers){
- const res=[];
- for(let i=0;i<tickers.length;i++){
- const t=tickers[i];
- updateDeepChip(t,'active');
- document.getElementById('ph2-detail').textContent=`A analisar ${t}... (${i+1}/${tickers.length})`;
- document.getElementById('ph2-fill').style.width=Math.round((i/tickers.length)*100)+'%';
- try{const r=await analyzeDeep(t);r.ticker=t;r.universes=TICKER_U[t]||[];res.push(r);updateDeepChip(t,'done');appendCard(r,i+1);}
- catch(e){updateDeepChip(t,'done');}
- }
- return res;
+  const res=[];
+  // Process in batches of 5 to reduce API calls (5 tickers per call = 8 calls instead of 40)
+  const BATCH=5;
+  for(let i=0;i<tickers.length;i+=BATCH){
+    const batch=tickers.slice(i,i+BATCH);
+    batch.forEach(t=>updateDeepChip(t,'active'));
+    document.getElementById('ph2-detail').textContent=`A analisar lote ${Math.floor(i/BATCH)+1}/${Math.ceil(tickers.length/BATCH)}: ${batch.join(', ')}`;
+    document.getElementById('ph2-fill').style.width=Math.round((i/tickers.length)*100)+'%';
+    try{
+      const batchRes=await analyzeDeepBatch(batch);
+      for(const r of batchRes){
+        if(r&&r.ticker){
+          r.universes=TICKER_U[r.ticker]||[];
+          res.push(r);
+          updateDeepChip(r.ticker,'done');
+          appendCard(r,res.length);
+        }
+      }
+      batch.forEach(t=>updateDeepChip(t,'done'));
+    }catch(e){
+      console.warn('Batch error:',e.message);
+      batch.forEach(t=>updateDeepChip(t,'done'));
+    }
+    // Small delay to avoid rate limits
+    if(i+BATCH<tickers.length) await new Promise(r=>setTimeout(r,1000));
+  }
+  return res;
 }
-async function analyzeDeep(ticker){
- return await callGemini(`Analisa "${ticker}" com dados reais usando Google Search. Pesquisa em stockanalysis.com, finviz.com, macrotrends.net, yahoo finance, morningstar.com, alphaspread.com.
-Calcula: company_name, sector, roe (ROE médio 10a %), net_margin (%), eps_growth (%/ano 10a), debt_years (dívida/lucro), moat_score (0-10), intrinsic_value (DCF owner earnings 10 anos desconta 10% terminal g=3%), current_price ($), margin_of_safety ((intrínseco-preço)/intrínseco*100), pe_ratio, dividend_yield (%), buffett_score (0-100: ROE 20%+margem 15%+EPS 15%+moat 20%+MoS 20%+dívida 10%), rating (COMPRAR se MoS>25 e score>65 e debt_years<5, EVITAR se score<35 ou debt_years>8, senão AGUARDAR), buy_price (intrínseco*0.70), thesis (2 frases português Portugal), week_change (%), data_quality (alta/média/baixa).
-APENAS JSON: {"company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0,"data_quality":"média"}`,true);
+async function analyzeDeepBatch(tickers){
+  const tickerList=tickers.join(', ');
+  const prompt=`Use Google Search to find current financial data for these ${tickers.length} stocks: ${tickerList}
+Search stockanalysis.com, finviz.com, macrotrends.net, finance.yahoo.com for each stock.
+For EACH stock calculate: ticker, company_name, sector, roe (10yr avg ROE %), net_margin (%), eps_growth (%/yr 10yr), debt_years (total debt/net income), moat_score (0-10), intrinsic_value (DCF: project owner earnings 10yrs, discount at 10%, terminal value g=3%), current_price ($), margin_of_safety ((intrinsic-price)/intrinsic*100), pe_ratio, dividend_yield (%), buffett_score (0-100: ROE 20%+margin 15%+EPS 15%+moat 20%+MoS 20%+debt 10%), rating (BUY if MoS>25 and score>65 and debt_years<5, AVOID if score<35 or debt_years>8, else HOLD), buy_price (intrinsic*0.70), thesis (2 sentences in European Portuguese), week_change (% this week), data_quality (high/medium/low).
+Respond ONLY with valid JSON — array of objects, one per stock:
+{"results":[{"ticker":"","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"HOLD","buy_price":0,"thesis":"","week_change":0,"data_quality":"medium"}]}`;
+
+  const raw=await callGeminiRaw(prompt,true);
+  const parsed=parseGeminiJSON(raw);
+  // Normalize rating to Portuguese
+  const ratingMap={'BUY':'COMPRAR','HOLD':'AGUARDAR','AVOID':'EVITAR','COMPRAR':'COMPRAR','AGUARDAR':'AGUARDAR','EVITAR':'EVITAR'};
+  return(parsed.results||[]).map(r=>({...r,rating:ratingMap[r.rating]||'AGUARDAR'}));
 }
 
 function renderScanResults(){
@@ -722,7 +755,7 @@ if(lastScan?.results?.length){
  document.getElementById('lastRunBar').style.display='flex';
  document.getElementById('scanEmpty').style.display='none';
  
- document.getElementById('scanBtn').textContent='Reanalisar';
+ const sb=document.getElementById('scanBtn');if(sb){sb.textContent='Reanalisar';sb.disabled=false;}
 }
 initDashboard();
 </script></body></html>
