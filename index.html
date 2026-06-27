@@ -533,10 +533,12 @@ async function callGemini(prompt,useSearch=false){
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'Gemini error '+res.status);}
   const data=await res.json();
   const txt=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('\n')||'';
-  const clean=txt.replace(/```json[\s\S]*?```|```[\s\S]*?```/g,m=>m.replace(/```json|```/g,'')).trim();
-  const match=clean.match(/\{[\s\S]*\}/);
-  if(!match)throw new Error('Sem JSON na resposta');
-  return JSON.parse(match[0]);
+  const clean=txt.replace(/```json/g,'').replace(/```/g,'').trim();
+  const s=clean.indexOf('{'),e=clean.lastIndexOf('}');
+  if(s===-1||e===-1)throw new Error('Sem JSON na resposta. Resposta: '+txt.slice(0,200));
+  const js=clean.slice(s,e+1);
+  try{return JSON.parse(js);}
+  catch(ex){const fixed=js.replace(/,\s*([}\]])/g,'$1').replace(/:\s*undefined/g,':null');return JSON.parse(fixed);}
 }
 
 // ═══════════════════════════════════════
