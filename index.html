@@ -1227,29 +1227,40 @@ async function analyzeOne(ticker){
   var realData = '';
   if(yPrice) realData += 'Current price: $'+yPrice.price.toFixed(2)+' ('+yPrice.currency+'). ';
   if(yFund){
-    if(yFund.roe!=null) realData += 'ROE: '+(yFund.roe*100).toFixed(1)+'%. ';
+    if(yFund.roe!=null) realData += 'ROE TTM: '+(yFund.roe*100).toFixed(1)+'%. ';
+    if(yFund.roeAvg5!=null) realData += 'ROE avg 5yr: '+(yFund.roeAvg5*100).toFixed(1)+'%. ';
     if(yFund.netMargin!=null) realData += 'Net margin: '+(yFund.netMargin*100).toFixed(1)+'%. ';
+    if(yFund.grossMargin!=null) realData += 'Gross margin: '+(yFund.grossMargin*100).toFixed(1)+'%. ';
+    if(yFund.grossMarginAvg5!=null) realData += 'Gross margin avg 5yr: '+(yFund.grossMarginAvg5*100).toFixed(1)+'%. ';
+    if(yFund.opMargin!=null) realData += 'Operating margin: '+(yFund.opMargin*100).toFixed(1)+'%. ';
     if(yFund.pe!=null) realData += 'P/E: '+yFund.pe.toFixed(1)+'. ';
-    if(yFund.revenue!=null) realData += 'Revenue: $'+(yFund.revenue/1e9).toFixed(1)+'B. ';
-    if(yFund.fcf!=null) realData += 'FCF: $'+(yFund.fcf/1e9).toFixed(1)+'B. ';
+    if(yFund.peg!=null) realData += 'PEG: '+yFund.peg.toFixed(2)+'. ';
+    if(yFund.revenue!=null) realData += 'Revenue TTM: $'+(yFund.revenue/1e9).toFixed(1)+'B. ';
+    if(yFund.fcf!=null) realData += 'FCF TTM: $'+(yFund.fcf/1e9).toFixed(1)+'B. ';
+    if(yFund.revenueCagr5!=null) realData += 'Revenue CAGR 5yr: '+(yFund.revenueCagr5*100).toFixed(1)+'%. ';
+    if(yFund.netIncomeCagr5!=null) realData += 'Net income CAGR 5yr: '+(yFund.netIncomeCagr5*100).toFixed(1)+'%. ';
+    if(yFund.fcfCagr5!=null) realData += 'FCF CAGR 5yr: '+(yFund.fcfCagr5*100).toFixed(1)+'%. ';
+    if(yFund.epsGrowthNext5y!=null) realData += 'EPS growth next 5yr (analysts): '+(yFund.epsGrowthNext5y*100).toFixed(1)+'%. ';
     if(yFund.totalDebt!=null) realData += 'Total debt: $'+(yFund.totalDebt/1e9).toFixed(1)+'B. ';
-    if(yFund.earningsGrowth!=null) realData += 'Earnings growth: '+(yFund.earningsGrowth*100).toFixed(1)+'%. ';
+    if(yFund.cash!=null) realData += 'Cash: $'+(yFund.cash/1e9).toFixed(1)+'B. ';
+    if(yFund.currentRatio!=null) realData += 'Current ratio: '+yFund.currentRatio.toFixed(2)+'. ';
+    if(yFund.debtToEquity!=null) realData += 'Debt/equity: '+yFund.debtToEquity.toFixed(1)+'%. ';
     if(yFund.dividendYield!=null) realData += 'Dividend yield: '+(yFund.dividendYield*100).toFixed(2)+'%. ';
     if(yFund.beta!=null) realData += 'Beta: '+yFund.beta.toFixed(2)+'. ';
-    if(dcf) realData += 'DCF intrinsic value (calculated): $'+dcf.intrinsicValue.toFixed(2)+'/share (WACC '+( dcf.wacc*100).toFixed(1)+'%, FCF growth '+(dcf.fcfGrowthUsed*100).toFixed(1)+'%). ';
+    if(yFund.roa!=null) realData += 'ROA: '+(yFund.roa*100).toFixed(1)+'%. ';
+    if(dcf) realData += 'DCF intrinsic value (10yr, WACC '+(dcf.wacc*100).toFixed(1)+'%, FCF growth '+(dcf.fcfGrowthUsed*100).toFixed(1)+'%, source: '+dcf.sourceGrowth+'): $'+dcf.intrinsicValue.toFixed(2)+'/share. ';
   }
 
   var prompt = 'You are a Warren Buffett analyst. Here are the REAL financial data for '+ticker+': '+realData
     +' Using ONLY these real numbers (do not invent or estimate any financial figures), provide: '
     +'(1) moat_score 0-10 based on the real margins/ROE/growth provided '
     +'(2) moat_justification: 1 sentence on competitive advantage '
-    +'(3) buffett_score 0-100 based on the real data vs Buffett criteria (ROE>'+cfg2.roe+'%, margin>'+cfg2.margin+'%, P/E<'+cfg2.pe+', moat>'+cfg2.moat+') '
-    +'(4) rating: COMPRAR if margin_of_safety>'+(dcf?cfg2.mos:'20')+'% and quality criteria met, else AGUARDAR '
-    +'(5) thesis: 2-3 sentences qualitative analysis of the business quality and competitive position '
-    +'(6) next_earnings: approximate next earnings date if known '
-    +'(7) guidance: brief description of recent company guidance '
+    +'(3) rating: COMPRAR if DCF intrinsic value > current price by >'+cfg2.mos+'% AND quality is high, else AGUARDAR '
+    +'(4) thesis: 2-3 sentences qualitative analysis of the business quality and competitive position '
+    +'(5) next_earnings: approximate next earnings date if known '
+    +'(6) guidance: brief description of recent company guidance '
     +customRules2
-    +' Return ONLY JSON: {"sector":"","moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","thesis":"","next_earnings":"","guidance":""}';
+    +' Return ONLY JSON: {"sector":"","moat_score":0,"moat_justification":"","rating":"AGUARDAR","thesis":"","next_earnings":"","guidance":""}';
 
   var raw = await callGeminiRaw(prompt, false);
   var aiData = parseJSON(raw);
@@ -1280,7 +1291,8 @@ async function analyzeOne(ticker){
     // AI qualitative
     moat_score: aiData.moat_score || 0,
     moat_justification: aiData.moat_justification || '',
-    buffett_score: aiData.buffett_score || 0,
+    buffett_score: (function(){ var bs=calcBuffettScore(yFund,dcf,currentPrice); return bs.score; })(),
+    score_breakdown: calcBuffettScore(yFund,dcf,currentPrice).breakdown,
     rating: aiData.rating || 'AGUARDAR',
     thesis: aiData.thesis || '',
     next_earnings: aiData.next_earnings || '',
@@ -1485,12 +1497,11 @@ function buildPortCard(s){
         +'<div class="pi"><div class="pi-label">Atual '+(d.yahoo_currency||'USD')+(d.yahoo_market_state&&d.yahoo_market_state!=='REGULAR'?' <span style="font-size:8px;background:#f0f4ff;color:#6b84a8;padding:1px 4px;border-radius:3px;">'+d.yahoo_market_state+'</span>':'')+'</div>'      +'<div class="pi-value c-blue">$'+(d.current_price?d.current_price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</div>'      +(d.yahoo_change_pct!=null?'<div style="font-size:10px;font-weight:600;color:'+(d.yahoo_change_pct>=0?'var(--green)':'var(--red)')+';">'+(d.yahoo_change_pct>=0?'+':'')+d.yahoo_change_pct.toFixed(2)+'% hoje <span style="font-size:9px;background:#e8f5e9;color:#15803d;padding:1px 5px;border-radius:3px;">Yahoo Finance</span></div>':'')      +'</div>'
         +'<div class="pi"><div class="pi-label">Meu Preco ('+cur+')</div><div class="pi-value">'+(s.buyPrice?sym+s.buyPrice.toFixed(2):'—')+'</div></div>'
         +'<div class="pi"><div class="pi-label">P&amp;L</div><div class="pi-value" style="color:'+pnlC+'">'+pnlStr+'</div></div>'
-        +'<div class="pi"><div class="pi-label">Score</div><div class="pi-value" style="color:'+(d.buffett_score>=65?'var(--green)':d.buffett_score>=40?'var(--amber)':'var(--red)')+'">'+(d.buffett_score||'—')+'</div></div>'
+        +'<div class="pi" style="cursor:pointer;" onclick="this.querySelector('.score-bd').style.display=this.querySelector('.score-bd').style.display==='none'?'block':'none'">'        +'<div class="pi-label">Score Buffett <span style="font-size:8px;color:var(--muted);">▾</span></div>'        +'<div class="pi-value" style="color:'+(d.buffett_score>=65?'var(--green)':d.buffett_score>=40?'var(--amber)':'var(--red)')+'">'+( d.buffett_score||'—')+'/100</div>'        +(d.score_breakdown?'<div class="score-bd" style="display:none;margin-top:6px;font-size:9px;line-height:1.8;">'          +d.score_breakdown.map(function(b){return '<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:1px 0;"><span style="color:var(--muted);">'+b.label+' ('+b.value+')</span><span style="font-weight:700;color:'+(b.pts>=b.max*0.7?'var(--green)':b.pts>=b.max*0.4?'var(--amber)':'var(--red)')+'">'+b.pts+'/'+b.max+'</span></div>';}).join('')          +'</div>':'')        +'</div>'
         +'<div class="pi"><div class="pi-label">Intrinseco</div><div class="pi-value c-green">$'+(d.intrinsic_value?d.intrinsic_value.toFixed(2):'—')+'</div></div>'
         +'<div class="pi"><div class="pi-label">Preco Alvo</div><div class="pi-value c-amber">$'+(d.buy_price?d.buy_price.toFixed(2):'—')+'</div></div>'
         +'<div class="pi"><div class="pi-label">Marg. Seg.</div><div class="pi-value" style="color:'+mosC+'">'+(d.margin_of_safety?d.margin_of_safety.toFixed(1):'—')+'%</div></div>'
-        +'<div class="pi"><div class="pi-label">Dividendo</div><div class="pi-value c-green">'+(d.dividend_yield>0?d.dividend_yield.toFixed(2)+'%':'—')+'</div></div>'
-      +'</div>'
+        +'<div class="pi"><div class="pi-label">Dividendo</div><div class="pi-value c-green">'+(d.dividend_yield>0?d.dividend_yield.toFixed(2)+'%':'—')+'</div></div>'        +(d.fundamentals&&d.fundamentals.roeAvg5!=null?'<div class="pi"><div class="pi-label">ROE 5a <span style="font-size:8px;color:#0891b2;font-weight:700;">Yahoo</span></div><div class="pi-value">'+(d.fundamentals.roeAvg5*100).toFixed(1)+'%</div></div>':'')        +(d.fmp&&d.fmp.roic!=null?'<div class="pi"><div class="pi-label">ROIC <span style="font-size:8px;color:#0891b2;font-weight:700;">FMP</span></div><div class="pi-value">'+(d.fmp.roic*100).toFixed(1)+'%</div></div>':'')        +(d.fundamentals&&d.fundamentals.grossMargin!=null?'<div class="pi"><div class="pi-label">Margem Bruta</div><div class="pi-value">'+(d.fundamentals.grossMargin*100).toFixed(1)+'%</div></div>':'')        +(d.fundamentals&&d.fundamentals.fcfCagr5!=null?'<div class="pi"><div class="pi-label">FCF CAGR 5a</div><div class="pi-value">'+(d.fundamentals.fcfCagr5*100).toFixed(1)+'%</div></div>':'')      +'</div>'
       +(d.next_earnings?'<div class="ep"><div class="ep-label">Proximos Resultados</div><div class="ep-date">'+d.next_earnings+'</div>'+(d.earnings_countdown?'<div class="ep-cd">'+d.earnings_countdown+'</div>':'')+'</div>':'')
       +(d.guidance?'<div class="gp"><div class="gp-label">Guidance</div><div class="gp-text">'+d.guidance+'</div></div>':'')
       +'<div class="port-section-label">Noticias Recentes</div>'
@@ -1503,6 +1514,65 @@ function buildPortCard(s){
       +'</div>'
       +(d.dcf?'<div style="margin-top:12px;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;">'        +'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:8px;letter-spacing:.04em;">DCF — VALOR INTRÍNSECO REAL</div>'        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'          +'<div><div style="font-size:9px;color:var(--muted);">Crescimento FCF (fonte: '+( d.dcf.sourceGrowth||'FCF')+')</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.fcfGrowthUsed*100).toFixed(1)+'%/ano (5a) → '+(d.dcf.growth2*100).toFixed(1)+'% (6-10a)</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">WACC (rf 4.5% + β×5.5%)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.wacc*100).toFixed(1)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Crescimento terminal</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.terminalGrowth*100).toFixed(0)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Dívida líquida</div><div style="font-size:11px;font-weight:700;color:'+(d.dcf.debtAdjusted>0?'var(--red)':'var(--green)')+';">$'+Math.abs(d.dcf.debtAdjusted/1e9).toFixed(1)+'B '+(d.dcf.debtAdjusted>0?'dívida':'caixa net')+'</div></div>'          +(d.fundamentals&&d.fundamentals.fcfCagr5!=null?'<div><div style="font-size:9px;color:var(--muted);">FCF CAGR 5 anos (real)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.fundamentals.fcfCagr5*100).toFixed(1)+'%/ano</div></div>':'')          +(d.fundamentals&&d.fundamentals.epsGrowthNext5y!=null?'<div><div style="font-size:9px;color:var(--muted);">EPS crescimento próx. 5a (analistas)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.fundamentals.epsGrowthNext5y*100).toFixed(1)+'%/ano</div></div>':'')        +'</div>'        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'          +'<span style="font-size:10px;color:var(--muted);">Valor intrínseco/ação</span>'          +'<span style="font-size:14px;font-weight:800;color:var(--green);">$'+d.intrinsic_value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'        +'</div>'        +'<div style="font-size:9px;color:var(--muted);margin-top:4px;">Yahoo Finance · dados reais 5 anos · DCF 10 anos · beta '+(d.fundamentals&&d.fundamentals.beta?d.fundamentals.beta.toFixed(2):'—')+'</div>'      +'</div>':'')
     +'</div></div>';
+}
+
+// ── BUFFETT SCORE — calculated locally, transparent weights ──
+// Total 100pts across 7 criteria based on real Yahoo/FMP data
+function calcBuffettScore(fund, dcf, price){
+  if(!fund) return {score:0, breakdown:[]};
+  var breakdown = [];
+  var total = 0;
+
+  // 1. ROE (avg 5yr) — 20pts
+  var roe = fund.roeAvg5!=null ? fund.roeAvg5*100 : (fund.roe!=null ? fund.roe*100 : null);
+  var roePts = 0;
+  if(roe!=null){ roePts = roe>=20?20 : roe>=15?15 : roe>=10?8 : roe>=5?3 : 0; }
+  breakdown.push({label:'ROE 5a',value:roe!=null?roe.toFixed(1)+'%':'—',pts:roePts,max:20});
+  total += roePts;
+
+  // 2. Net margin — 15pts
+  var nm = fund.netMargin!=null ? fund.netMargin*100 : null;
+  var nmPts = 0;
+  if(nm!=null){ nmPts = nm>=20?15 : nm>=15?12 : nm>=10?8 : nm>=5?4 : 0; }
+  breakdown.push({label:'Margem líquida',value:nm!=null?nm.toFixed(1)+'%':'—',pts:nmPts,max:15});
+  total += nmPts;
+
+  // 3. Gross margin stability — 10pts
+  var gm = fund.grossMarginAvg5!=null ? fund.grossMarginAvg5*100 : (fund.grossMargin!=null ? fund.grossMargin*100 : null);
+  var gmPts = 0;
+  if(gm!=null){ gmPts = gm>=50?10 : gm>=40?8 : gm>=30?5 : gm>=20?2 : 0; }
+  breakdown.push({label:'Margem bruta',value:gm!=null?gm.toFixed(1)+'%':'—',pts:gmPts,max:10});
+  total += gmPts;
+
+  // 4. Revenue CAGR 5yr — 15pts
+  var rcagr = fund.revenueCagr5!=null ? fund.revenueCagr5*100 : null;
+  var rcPts = 0;
+  if(rcagr!=null){ rcPts = rcagr>=15?15 : rcagr>=10?12 : rcagr>=7?9 : rcagr>=3?5 : rcagr>=0?2 : 0; }
+  breakdown.push({label:'Crescimento receita 5a',value:rcagr!=null?rcagr.toFixed(1)+'%/a':'—',pts:rcPts,max:15});
+  total += rcPts;
+
+  // 5. Debt burden — 10pts
+  var debt = (fund.totalDebt&&fund.fcf&&fund.fcf>0) ? fund.totalDebt/fund.fcf : null;
+  var dPts = 0;
+  if(debt!=null){ dPts = debt<1?10 : debt<2?8 : debt<3?6 : debt<5?3 : 0; }
+  breakdown.push({label:'Dívida/FCF',value:debt!=null?debt.toFixed(1)+'x':'—',pts:dPts,max:10});
+  total += dPts;
+
+  // 6. Margin of safety (DCF) — 20pts
+  var mos = (price>0&&dcf&&dcf.intrinsicValue>0) ? (dcf.intrinsicValue-price)/dcf.intrinsicValue*100 : null;
+  var mosPts = 0;
+  if(mos!=null){ mosPts = mos>=40?20 : mos>=30?16 : mos>=20?12 : mos>=10?6 : mos>=0?2 : 0; }
+  breakdown.push({label:'Margem segurança DCF',value:mos!=null?mos.toFixed(1)+'%':'—',pts:mosPts,max:20});
+  total += mosPts;
+
+  // 7. FCF CAGR 5yr — 10pts
+  var fcagr = fund.fcfCagr5!=null ? fund.fcfCagr5*100 : null;
+  var fcPts = 0;
+  if(fcagr!=null){ fcPts = fcagr>=15?10 : fcagr>=10?8 : fcagr>=5?5 : fcagr>=0?2 : 0; }
+  breakdown.push({label:'FCF CAGR 5a',value:fcagr!=null?fcagr.toFixed(1)+'%/a':'—',pts:fcPts,max:10});
+  total += fcPts;
+
+  return {score: Math.round(total), breakdown: breakdown};
 }
 
 // ── YAHOO FINANCE REAL PRICE + FUNDAMENTALS + DCF ──
@@ -1785,14 +1855,13 @@ async function fetchStock(ticker){
       +'(2) sector: business sector '
       +'(3) moat_score 0-10: based on real margins/ROE/growth consistency '
       +'(4) moat_justification: 1 sentence on the specific competitive advantage or weakness '
-      +'(5) buffett_score 0-100: quality score based on the real data provided '
-      +'(6) rating: COMPRAR if price is below DCF intrinsic value by >20% AND quality is high, else AGUARDAR '
-      +'(7) thesis: 2-3 sentences on business quality and competitive position '
-      +'(8) next_earnings: approximate next earnings date '
-      +'(9) earnings_countdown: approximate days until next earnings '
-      +'(10) guidance: most recent company revenue/earnings guidance '
-      +'(11) news: 3 recent relevant news items with title, source, date '
-      +' Return ONLY JSON: {"company_name":"","sector":"","moat_score":0,"moat_justification":"","buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}]}';
+      +'(5) rating: COMPRAR if DCF intrinsic value > current price by >20% AND quality metrics are strong, else AGUARDAR '
+      +'(6) thesis: 2-3 sentences on business quality and competitive position '
+      +'(7) next_earnings: approximate next earnings date '
+      +'(8) earnings_countdown: approximate days until next earnings '
+      +'(9) guidance: most recent company revenue/earnings guidance '
+      +'(10) news: 3 recent relevant news items with title, source, date '
+      +' Return ONLY JSON: {"company_name":"","sector":"","moat_score":0,"moat_justification":"","rating":"AGUARDAR","thesis":"","next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}]}';
 
     var raw = await callGeminiRaw(prompt, false);
     var aiData = parseJSON(raw);
@@ -1823,7 +1892,8 @@ async function fetchStock(ticker){
       yahoo_market_state: yPrice&&yPrice.marketState,
       moat_score: aiData.moat_score||0,
       moat_justification: aiData.moat_justification||'',
-      buffett_score: aiData.buffett_score||0,
+      buffett_score: (function(){ var bs=calcBuffettScore(yFund,dcf,currentPrice); return bs.score; })(),
+      score_breakdown: calcBuffettScore(yFund,dcf,currentPrice).breakdown,
       rating: aiData.rating||'AGUARDAR',
       thesis: aiData.thesis||'',
       next_earnings: aiData.next_earnings||'',
