@@ -1030,23 +1030,49 @@ async function refreshAll(){
 
 // ── INIT ──
 async function initApp(){
+  // Show loading overlay while Firebase loads
+  showLoadingOverlay(true);
   updatePill();
+
   if(window.DB){
     updateSyncStatus('syncing');
     try{
-      var results=await Promise.all([window.DB.load(K.key),window.DB.load(K.port),window.DB.load(K.scan)]);
-      var fbKey=results[0],fbPort=results[1],fbScan=results[2];
+      console.log('Loading from Firebase, session:', window.DB.getSessionKey());
+      var results=await Promise.all([
+        window.DB.load(K.key),
+        window.DB.load(K.port),
+        window.DB.load(K.scan)
+      ]);
+      var fbKey=results[0], fbPort=results[1], fbScan=results[2];
+      console.log('Firebase results - key:', !!fbKey, 'portfolio:', fbPort&&fbPort.length, 'scan:', fbScan&&fbScan.results&&fbScan.results.length);
+
       if(fbKey){
-        var keyStr=typeof fbKey==='string'?fbKey:String(fbKey);
-        localStorage.setItem(K.key,JSON.stringify(keyStr));
+        var keyStr=typeof fbKey==='string'?fbKey:JSON.stringify(fbKey);
+        // Remove extra quotes if double-encoded
+        if(keyStr.startsWith('"')&&keyStr.endsWith('"')) keyStr=JSON.parse(keyStr);
+        localStorage.setItem(K.key, JSON.stringify(keyStr));
         updatePill();
-        console.log('API key restored from Firebase');
+        console.log('API key restored, length:', keyStr.length);
       }
-      if(fbPort&&fbPort.length){portfolio=fbPort;localStorage.setItem(K.port,JSON.stringify(fbPort));console.log('Portfolio:',fbPort.length,'stocks');}
-      if(fbScan&&fbScan.results){lastScan=fbScan;localStorage.setItem(K.scan,JSON.stringify(fbScan));scanResults=fbScan.results;console.log('Scan:',scanResults.length,'results');}
+      if(fbPort&&Array.isArray(fbPort)&&fbPort.length){
+        portfolio=fbPort;
+        localStorage.setItem(K.port, JSON.stringify(fbPort));
+        console.log('Portfolio restored:', fbPort.length, 'stocks');
+      }
+      if(fbScan&&fbScan.results&&fbScan.results.length){
+        lastScan=fbScan;
+        localStorage.setItem(K.scan, JSON.stringify(fbScan));
+        scanResults=fbScan.results;
+        console.log('Scan restored:', scanResults.length, 'results');
+      }
       updateSyncStatus((fbPort&&fbPort.length)||fbScan?'loaded':'synced');
-    }catch(e){console.warn('Firebase load error:',e.message);updateSyncStatus('error');}
+    }catch(e){
+      console.error('Firebase load error:', e.message);
+      updateSyncStatus('error');
+    }
   }
+
+  // Restore scanner state
   if(lastScan&&lastScan.results&&lastScan.results.length){
     scanResults=lastScan.results;
     var lrd=document.getElementById('lastRunDate');if(lrd)lrd.textContent=new Date(lastScan.date).toLocaleDateString('pt-PT',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
@@ -1055,8 +1081,23 @@ async function initApp(){
     var se=document.getElementById('scanEmpty');if(se)se.style.display='none';
     var sbtn=document.getElementById('scanBtn');if(sbtn)sbtn.textContent='Reanalisar';
   }
+
+  // Init UI with restored data
   initDashboard();
   renderPortfolio();
+  showLoadingOverlay(false);
+}
+
+function showLoadingOverlay(show){
+  var el=document.getElementById('loadingOverlay');
+  if(!el){
+    el=document.createElement('div');
+    el.id='loadingOverlay';
+    el.style.cssText='position:fixed;inset:0;background:rgba(244,247,252,0.95);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:Inter,system-ui,sans-serif;';
+    el.innerHTML='<div style="width:36px;height:36px;border:3px solid #dbe8ff;border-top-color:#1a56db;border-radius:50%;animation:spin .7s linear infinite"></div><div style="font-size:14px;font-weight:600;color:#3d5a8a">A carregar dados...</div><div style="font-size:12px;color:#7a94bd">Firebase a sincronizar</div>';
+    document.body.appendChild(el);
+  }
+  el.style.display=show?'flex':'none';
 }
 
 function waitForDB(retries){
