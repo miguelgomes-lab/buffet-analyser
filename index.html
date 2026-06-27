@@ -710,35 +710,36 @@ async function phase2(tickers){
   const res=[];
   const pd2=document.getElementById('ph2-detail');
   const pf2=document.getElementById('ph2-fill');
+  // Run all in parallel - each ticker is one call
   tickers.forEach(function(t){updateDeepChip(t,'active');});
-  if(pd2) pd2.textContent='A analisar '+tickers.length+' acoes com Gemini 2.5 Pro...';
-  animFill('ph2-fill',0,90,25000);
-  try{
-    const batchRes=await analyzeAll(tickers);
-    batchRes.forEach(function(r){
+  var completed=0;
+  var promises=tickers.map(function(ticker){
+    return analyzeOne(ticker).then(function(r){
+      completed++;
+      if(pf2) pf2.style.width=Math.round((completed/tickers.length)*100)+'%';
+      if(pd2) pd2.textContent='Concluido '+completed+' de '+tickers.length+'...';
       if(r&&r.ticker){
         r.universes=TICKER_U[r.ticker]||[];
         res.push(r);
-        updateDeepChip(r.ticker,'done');
+        updateDeepChip(ticker,'done');
         appendCard(r,res.length);
+      } else {
+        updateDeepChip(ticker,'done');
       }
+    }).catch(function(e){
+      completed++;
+      console.warn('Error analyzing '+ticker+':',e.message);
+      updateDeepChip(ticker,'done');
     });
-  }catch(e){
-    console.warn('Analysis error:',e.message);
-    if(pd2) pd2.textContent='Erro: '+e.message;
-  }
-  tickers.forEach(function(t){updateDeepChip(t,'done');});
-  if(pf2) pf2.style.width='100%';
+  });
+  await Promise.all(promises);
   return res;
 }
 
-async function analyzeAll(tickers){
-  // Single call - Gemini 2.5 Pro knows financial data from training
-  // Use search only for current prices and recent data
-  const prompt='You are a financial analyst expert in Warren Buffett investing methodology. Analyze these '+tickers.length+' stocks: '+tickers.join(', ')+'. Use your training knowledge for fundamental data (ROE history, margins, moat, EPS growth) and Google Search for current stock prices and this week changes. For each stock calculate: ticker (exact symbol), company_name, sector, roe (10yr avg ROE %), net_margin (current net margin %), eps_growth (10yr EPS growth %/yr), debt_years (total debt / annual net income), moat_score (0-10 competitive advantage), intrinsic_value (DCF: estimate normalized owner earnings, project 10 years at sustainable growth rate, discount at 10%, add terminal value g=3%), current_price (USD, search for latest), margin_of_safety ((intrinsic_value-current_price)/intrinsic_value*100), pe_ratio (current), dividend_yield (%), buffett_score (0-100: ROE 20%+net_margin 15%+eps_growth 15%+moat_score 20%+margin_of_safety 20%+debt 10%), rating (COMPRAR if margin_of_safety>25 AND buffett_score>65 AND debt_years<5; EVITAR if buffett_score<35 OR debt_years>8; else AGUARDAR), buy_price (intrinsic_value*0.70), thesis (2 sentences in European Portuguese explaining investment case), week_change (% price change this week, use search). Return ONLY valid JSON, no markdown: {"results":[{"ticker":"AAPL","company_name":"Apple Inc","sector":"Technology","roe":150.0,"net_margin":25.3,"eps_growth":12.1,"debt_years":1.2,"moat_score":9,"intrinsic_value":185.0,"current_price":211.0,"margin_of_safety":-14.0,"pe_ratio":32.1,"dividend_yield":0.5,"buffett_score":72,"rating":"AGUARDAR","buy_price":129.5,"thesis":"A Apple possui um ecossistema inigualavel...","week_change":1.2},...]}';
-  const raw=await callGeminiRaw(prompt,true);
-  const parsed=parseJSON(raw);
-  return parsed.results||[];
+async function analyzeOne(ticker){
+  var prompt='Analyze stock '+ticker+' using Warren Buffett method. Use Google Search for current price and recent data. Return ONLY valid JSON no markdown: {"ticker":"'+ticker+'","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0} where: roe=10yr avg ROE%, net_margin=current net margin%, eps_growth=10yr EPS growth%/yr, debt_years=total debt/net income, moat_score=0-10 competitive moat, intrinsic_value=DCF value per share (owner earnings x 10yr growth discounted at 10% + terminal g=3%), current_price=latest USD price from search, margin_of_safety=(intrinsic-price)/intrinsic*100, buffett_score=0-100 (ROE 20%+margin 15%+EPS 15%+moat 20%+MoS 20%+debt 10%), rating=COMPRAR if MoS>25 and score>65 and debt<5 else EVITAR if score<35 or debt>8 else AGUARDAR, buy_price=intrinsic*0.70, thesis=2 sentences European Portuguese, week_change=% this week.';
+  var raw=await callGeminiRaw(prompt,true);
+  return parseJSON(raw);
 }
 
 // ── RENDER SCAN ──
