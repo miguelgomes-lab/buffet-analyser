@@ -323,43 +323,47 @@ function goTab(t){
 
 // GEMINI 
 async function callGemini(prompt,useSearch=false){
- const key=getKey();
- // Force JSON output via system instruction
- const sysInstr={parts:[{text:'You must respond with valid JSON only. No markdown, no code blocks, no commentary before or after. Just the raw JSON object.'}]};
- const body={
- systemInstruction:sysInstr,
- contents:[{parts:[{text:prompt}]}],
- generationConfig:{temperature:0.1,maxOutputTokens:2048,responseMimeType:'application/json'}
- };
- if(useSearch){
- body.tools=[{googleSearch:{}}];
- delete body.generationConfig.responseMimeType; // incompatible with search
- }
- const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
- method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
- });
- if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'Gemini error '+res.status);}
- const data=await res.json();
- const txt=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
- if(!txt)throw new Error('Resposta vazia do Gemini');
- // Strip any markdown wrappers
- const stripped=txt.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
- // Find JSON boundaries
- const s=stripped.indexOf('{'),e=stripped.lastIndexOf('}');
- if(s===-1||e===-1)throw new Error('JSON invalido: '+stripped.slice(0,100));
- const jsonStr=stripped.slice(s,e+1);
- try{return JSON.parse(jsonStr);}
- catch(ex){
- // Fix common issues: trailing commas, JS-style comments
- const fixed=jsonStr
- .replace(/\/\*[\s\S]*?\*\//g,'')
- .replace(/\/\/[^\n]*/g,'')
- .replace(/,\s*([}\]])/g,'$1')
- .replace(/:\s*undefined/g,':null')
- .replace(/:\s*NaN/g,':0');
- try{return JSON.parse(fixed);}
- catch(ex2){throw new Error('Parse error: '+ex2.message+' | JSON: '+jsonStr.slice(0,150));}
- }
+  const key=getKey();
+  const body={
+    contents:[{parts:[{text:prompt}]}],
+    generationConfig:{temperature:0.1,maxOutputTokens:2048}
+  };
+  if(useSearch){
+    body.tools=[{googleSearch:{}}];
+  } else {
+    body.generationConfig.responseMimeType='application/json';
+  }
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'Gemini error '+res.status);}
+  const data=await res.json();
+  const raw=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  if(!raw)throw new Error('Resposta vazia');
+  return parseGeminiJSON(raw);
+}
+
+function parseGeminiJSON(raw){
+  // Remove ALL markdown code fences regardless of position
+  let txt=raw;
+  txt=txt.replace(/```json/gi,'').replace(/```/g,'').trim();
+  // Find outermost JSON object
+  const s=txt.indexOf('{');
+  const e=txt.lastIndexOf('}');
+  if(s===-1||e===-1||s>=e) throw new Error('Sem JSON na resposta: '+txt.slice(0,120));
+  let js=txt.slice(s,e+1);
+  try{ return JSON.parse(js); } catch(_){}
+  // Fix common issues
+  js=js
+    .replace(/\/\*[\s\S]*?\*\//g,'')
+    .replace(/\/\/[^
+]*/g,'')
+    .replace(/,\s*([}\]])/g,'$1')
+    .replace(/:\s*undefined/g,':null')
+    .replace(/:\s*NaN/g,':0')
+    .replace(/:\s*Infinity/g,':0');
+  try{ return JSON.parse(js); }
+  catch(ex){ throw new Error('Parse falhou: '+ex.message+' | '+js.slice(0,100)); }
 }
 
 // 
