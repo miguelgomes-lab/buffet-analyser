@@ -331,7 +331,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAAZQxifNFbzmsc9pTiiiS56KHdd0owtJ0",
@@ -366,23 +366,37 @@ window.DB = {
   }
 };
 
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 window.AUTH = {
   async loginGoogle(){
     const provider = new GoogleAuthProvider();
-    try{ await signInWithPopup(auth, provider); }
+    try{
+      if(isMobile){ await signInWithRedirect(auth, provider); }
+      else{ await signInWithPopup(auth, provider); }
+    }
     catch(e){ console.error('Google login error:', e.message); alert('Erro ao entrar com Google: ' + e.message); }
   },
   async loginApple(){
     const provider = new OAuthProvider('apple.com');
     provider.addScope('name');
     provider.addScope('email');
-    try{ await signInWithPopup(auth, provider); }
+    try{
+      if(isMobile){ await signInWithRedirect(auth, provider); }
+      else{ await signInWithPopup(auth, provider); }
+    }
     catch(e){ console.error('Apple login error:', e.message); alert('Erro ao entrar com Apple: ' + e.message); }
   },
   async logout(){
     await signOut(auth);
   }
 };
+
+// Handle redirect result on page load
+try{
+  const result = await getRedirectResult(auth);
+  if(result){ console.log('Redirect login OK:', result.user.uid); }
+}catch(e){ console.error('Redirect result error:', e.message); }
 
 onAuthStateChanged(auth, function(user){
   if(user){
