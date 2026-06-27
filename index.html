@@ -404,13 +404,52 @@ function goTab(t){
 }
 
 // ── GEMINI API ──
-// Models to try in order (first that works is used)
-const GEMINI_MODELS=['gemini-2.0-flash-001','gemini-2.0-flash','gemini-1.5-flash-002','gemini-1.5-flash-001','gemini-1.5-flash'];
+// Models to try in order - comprehensive list of known Gemini model names
+const GEMINI_MODELS=[
+  'gemini-2.5-flash-preview-05-20',
+  'gemini-2.5-flash',
+  'gemini-2.5-pro-preview-05-06',
+  'gemini-2.0-flash-001',
+  'gemini-2.0-flash-lite-001',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash-002',
+  'gemini-1.5-flash-001',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro-latest',
+  'gemini-1.5-pro-002',
+  'gemini-1.5-pro'
+];
 let _workingModel=null;
+
+// Discover available models from the API
+async function discoverModel(key){
+  try{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
+    if(!res.ok) return null;
+    const data=await res.json();
+    const available=(data.models||[])
+      .filter(function(m){ return m.supportedGenerationMethods&&m.supportedGenerationMethods.includes('generateContent'); })
+      .map(function(m){ return m.name.replace('models/',''); });
+    console.log('Available Gemini models:',available);
+    // Find first model from our preference list that is available
+    for(var i=0;i<GEMINI_MODELS.length;i++){
+      if(available.includes(GEMINI_MODELS[i])){ return GEMINI_MODELS[i]; }
+    }
+    // Fallback: use first available model that contains 'flash'
+    var flashModel=available.find(function(m){ return m.includes('flash'); });
+    return flashModel||available[0]||null;
+  }catch(e){ console.warn('Model discovery failed:',e.message); return null; }
+}
 
 async function callGeminiRaw(prompt,useSearch){
   const key=getKey();
   if(!key) throw new Error('Sem API Key configurada. Clica em "Gemini Key" para configurar.');
+  // Auto-discover working model on first call
+  if(!_workingModel){
+    const discovered=await discoverModel(key);
+    if(discovered){ _workingModel=discovered; console.log('Auto-selected model:',discovered); }
+  }
   const body={
     contents:[{parts:[{text:prompt}]}],
     generationConfig:{temperature:0.1,maxOutputTokens:4096}
