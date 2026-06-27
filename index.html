@@ -520,19 +520,24 @@ async function callGeminiRaw(prompt,useSearch){
 
 function parseJSON(raw){
   if(!raw) throw new Error('Resposta vazia');
-  // Strip markdown fences
-  let txt=raw.replace(/```json/gi,'').replace(/```/g,'').trim();
-  // Find outermost { }
-  const si=txt.indexOf('{');
-  const ei=txt.lastIndexOf('}');
+  var txt=raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+  var si=txt.indexOf('{');
+  var ei=txt.lastIndexOf('}');
   if(si===-1||ei===-1||si>=ei) throw new Error('Sem JSON: '+txt.slice(0,80));
-  let str=txt.slice(si,ei+1);
-  try{ return JSON.parse(str); } catch(e1){
-    str=str.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/[^\n]*/g,'')
-           .replace(/,\s*([}\]])/g,'$1').replace(/:\s*undefined/g,':null').replace(/:\s*NaN/g,':0');
-    try{ return JSON.parse(str); } catch(e2){
-      throw new Error('JSON invalido: '+e2.message+' | '+str.slice(0,100));
-    }
+  var str=txt.slice(si,ei+1);
+  // Remove control characters that break JSON parsing
+  str=str.replace(/[ -	-]/g,' ');
+  // Replace literal newlines inside JSON string values
+  str=str.replace(/("(?:[^"\\]|\\.)*")/g,function(m){ return m.replace(/\n/g,' ').replace(/\r/g,''); });
+  try{ return JSON.parse(str); }
+  catch(e1){
+    var fixed=str
+      .replace(/\n/g,' ').replace(/\r/g,'')
+      .replace(/,\s*([}\]])/g,'$1')
+      .replace(/:\s*undefined/g,':null')
+      .replace(/:\s*NaN/g,':0');
+    try{ return JSON.parse(fixed); }
+    catch(e2){ throw new Error('JSON invalido: '+e2.message+' | '+str.slice(0,100)); }
   }
 }
 
@@ -976,6 +981,8 @@ function renderPortfolio(){
 function buildPortCard(s){
   const d=s.data;
   const upd=s.lastUpdated?new Date(s.lastUpdated).toLocaleDateString('pt-PT'):'';
+  const sym=s.currency==='EUR'?'€':'$';
+  const cur=s.currency||'USD';
   if(!d) return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name">A carregar...</div></div><div class="pc-btns"><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A pesquisar com Gemini...</div></div></div></div>';
   const pnl=s.buyPrice&&d.current_price?((d.current_price-s.buyPrice)/s.buyPrice*100):null;
   const pnlStr=pnl!=null?(pnl>0?'+':'')+pnl.toFixed(2)+'%':'—';
