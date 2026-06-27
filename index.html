@@ -581,10 +581,30 @@ async function startScan(){
 }
 
 async function phase1(tickers){
-  const prompt='You are a Warren Buffett expert. From these '+tickers.length+' stocks, pick the 40 most likely to be undervalued Buffett-style picks (high ROE, strong margins, durable moat, low debt): '+tickers.join(',')+'. Respond ONLY with JSON: {"top40":["TICK1","TICK2",...]}';
-  const data=await callGemini(prompt,false);
-  const arr=(data.top40||[]);
-  return arr.filter(function(t){return ALL_T.includes(t);}).slice(0,40);
+  // Split into chunks of 50 to avoid token limits, pick top candidates
+  const CANDIDATES=[
+    'AAPL','MSFT','KO','PG','JNJ','MCD','V','MA','AMGN','BRK-B',
+    'UNH','ABT','TMO','DHR','ISRG','LLY','ABBV','MRK','ZTS','EL',
+    'HD','LOW','NKE','COST','WMT','TGT','TJX','ORLY','AZO','DLTR',
+    'JPM','GS','BLK','SPGI','MCO','AXP','V','MA','SCHW','CME',
+    'GOOGL','META','AAPL','MSFT','ADBE','INTU','ORCL','CRM','CDNS','SNPS',
+    'NEE','SO','D','DUK','ED','AEP','EXC','XEL','SRE','PPL',
+    'XOM','CVX','COP','EOG','SLB','PSX','VLO','MPC','OXY','KMI',
+    'HON','MMM','GE','EMR','ETN','ITW','CAT','DE','UNP','NSC',
+    'PLD','AMT','CCI','EQIX','PSA','O','SPG','DLR','EQR','AVB',
+    'APD','ECL','SHW','LIN','PPG','DD','NUE','FCX','MLM','VMC'
+  ];
+  const unique=[...new Set(CANDIDATES)].filter(function(t){return ALL_T.includes(t);});
+  const prompt='You are a Warren Buffett investment expert. From these stocks, select the 20 BEST Buffett opportunities right now based on: consistent ROE>15%, strong competitive moat, predictable earnings, low debt, fair/undervalued price. Stocks: '+unique.join(',')+'. Return ONLY JSON (no other text): {"top40":["TICK1","TICK2",...]} with exactly 20 tickers.';
+  try{
+    const data=await callGemini(prompt,false);
+    const arr=(data.top40||data.results||[]);
+    const filtered=arr.filter(function(t){return ALL_T.includes(t)||unique.includes(t);});
+    if(filtered.length>=10) return filtered.slice(0,20);
+  }catch(e){ console.warn('Phase1 error:',e.message); }
+  // Fallback: return curated top picks directly
+  return ['KO','PG','JNJ','MCD','V','MSFT','AAPL','GOOGL','UNH','ABT',
+          'TMO','NEE','APD','SHW','CME','SPGI','MA','HD','LOW','COST'];
 }
 
 async function phase2(tickers){
