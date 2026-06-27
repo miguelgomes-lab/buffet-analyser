@@ -325,7 +325,27 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 <!-- APP ROOT -->
 <div id="appRoot" style="display:none;">
 
-<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Conta"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- Gemini Key modal removed - key stored in Firestore --><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
+<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" onclick="openSettingsModal()" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Definições"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;" onclick="openSettingsModal()"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- Gemini Key modal removed - key stored in Firestore -->
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(13,27,46,0.6);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSettingsModal()">
+  <div style="background:#fff;border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:800;color:#0d1b2e;">Definições</div>
+      <button onclick="closeSettingsModal()" style="background:none;border:none;font-size:20px;color:#6b84a8;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Gemini API Key</div>
+    <div style="font-size:11px;color:#6b84a8;margin-bottom:10px;">Obtém a tua key em <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#1a56db;">aistudio.google.com</a>. Fica guardada de forma segura na tua conta.</div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <input id="settingsKeyInput" type="password" placeholder="AIza..." style="flex:1;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:13px;outline:none;font-family:Inter,sans-serif;"/>
+      <button onclick="toggleSettingsKeyVisibility()" id="settingsKeyToggle" style="padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;cursor:pointer;font-size:14px;">👁</button>
+    </div>
+    <div id="settingsKeyStatus" style="font-size:11px;color:#6b84a8;margin-bottom:16px;min-height:16px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeSettingsModal()" style="flex:1;padding:10px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;font-size:13px;font-weight:600;cursor:pointer;color:#344f73;">Cancelar</button>
+      <button onclick="saveSettingsKey()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#1a56db;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>
+    </div>
+  </div>
+</div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
  Atualizar Dados
  </button></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 20</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 20 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Ainda sem scan — vai ao separador Scanner para analisar</div></div><button onclick="goTab('scanner')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Novo Scanner</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Vai ao separador Scanner e clica em "Iniciar Scanner"</div><button class="tbl-scan-btn" onclick="goTab('scanner')">Ir para o Scanner</button></td></tr></tbody></table></div></div></div><!-- SCANNER --><div class="page" id="page-scanner"><div class="scanner-hero"><div class="sh-top"><div><div class="sh-eyebrow">Warren Buffett Method · Google Gemini + Google Search</div><div class="sh-title">Scanner Automático de Mercado</div><div class="sh-sub">Fase 1: IA filtra 40 candidatos de 800+ ações. Fase 2: análise profunda com dados reais. Resultado: Top 20 oportunidades.</div><div class="sh-stats"><div class="sh-stat"><div class="sh-stat-n">800+</div><div class="sh-stat-l">Ações monitorizadas</div></div><div class="sh-stat"><div class="sh-stat-n">2</div><div class="sh-stat-l">Fases de análise</div></div><div class="sh-stat"><div class="sh-stat-n">Top 20</div><div class="sh-stat-l">Melhores oportunidades</div></div></div></div><button class="scan-btn" id="scanBtn" onclick="startScan()">
  Iniciar Scanner
@@ -451,6 +471,35 @@ function closeModal(){}
 function saveKey(){}
 function updatePill(){} // no pill in nav anymore
 function updateSyncStatus(status){}
+
+// ── SETTINGS MODAL ──
+function openSettingsModal(){
+  var input = document.getElementById('settingsKeyInput');
+  var status = document.getElementById('settingsKeyStatus');
+  var current = getKey();
+  if(current){ input.value = current; status.textContent = '✓ Key configurada (' + current.length + ' caracteres)'; status.style.color='#16a34a'; }
+  else { input.value = ''; status.textContent = 'Sem key configurada — a app não funciona sem ela.'; status.style.color='#dc2626'; }
+  document.getElementById('settingsModal').style.display = 'flex';
+  setTimeout(function(){ input.focus(); }, 100);
+}
+function closeSettingsModal(){
+  document.getElementById('settingsModal').style.display = 'none';
+}
+function toggleSettingsKeyVisibility(){
+  var input = document.getElementById('settingsKeyInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+async function saveSettingsKey(){
+  var k = document.getElementById('settingsKeyInput').value.trim();
+  var status = document.getElementById('settingsKeyStatus');
+  if(!k){ status.textContent = 'Introduz uma key válida.'; status.style.color='#dc2626'; return; }
+  status.textContent = 'A guardar...'; status.style.color='#6b84a8';
+  LS.s(K.key, k);
+  var ok = await window.DB.save(K.key, k);
+  if(ok){ status.textContent = '✓ Guardada com sucesso!'; status.style.color='#16a34a'; }
+  else { status.textContent = '✓ Guardada localmente (Firebase indisponível).'; status.style.color='#d97706'; }
+  setTimeout(function(){ closeSettingsModal(); initDashboard(); }, 1200);
+}
 
 // ── TABS ──
 function goTab(t){
