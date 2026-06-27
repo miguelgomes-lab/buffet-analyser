@@ -298,7 +298,29 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 </style>
 </head>
 <body>
-<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><span id="syncStatus" onclick="openSyncModal()" style="font-size:10px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:4px;border:1px solid var(--border)" title="Clica para gerir chave de sincronizacao">Cloud sync</span><button onclick="exportSettings()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2)">Exportar</button><label style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);margin:0">Importar<input type="file" accept=".json" onchange="importSettings(event)" style="display:none"/></label><div class="api-pill" id="apiPill" onclick="openModal()">Gemini Key</div></div></nav><div class="overlay" id="modal" style="display:none" onclick="if(event.target===this)closeModal()"><div class="modal"><h3>Google Gemini API Key</h3><p>Obtém a tua key gratuita em <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a></p><p style="color:var(--dim)">A key é guardada apenas no teu browser (localStorage).</p><input type="password" id="apiInput" placeholder="AIza..."/><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveKey()">Guardar</button></div></div></div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0d1b2e 0%,#1a3060 50%,#0d1b2e 100%);font-family:Inter,system-ui,sans-serif;">
+  <div style="background:#fff;border-radius:20px;padding:48px 40px;max-width:400px;width:90%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.35);">
+    <div style="width:56px;height:56px;background:linear-gradient(135deg,#1a56db,#2563eb);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+      <svg width="28" height="28" viewBox="0 0 18 18" fill="none"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg>
+    </div>
+    <div style="font-size:22px;font-weight:800;color:#0d1b2e;letter-spacing:-.02em;margin-bottom:6px;">Buffett Analyzer Pro</div>
+    <div style="font-size:13px;color:#6b84a8;margin-bottom:32px;">Análise de ações ao estilo Warren Buffett</div>
+    <button onclick="window.AUTH.loginGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 20px;border:1.5px solid #e2e8f4;border-radius:12px;background:#fff;font-size:14px;font-weight:600;color:#0d1b2e;cursor:pointer;margin-bottom:12px;transition:all .15s;">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continuar com Google
+    </button>
+    <button onclick="window.AUTH.loginApple()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 20px;border:none;border-radius:12px;background:#000;font-size:14px;font-weight:600;color:#fff;cursor:pointer;margin-bottom:24px;transition:all .15s;">
+      <svg width="18" height="18" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.1 134.7-316.5 267.5-316.5 97.2 0 178 65.2 239 65.2 58.5 0 150.2-69.5 250.9-69.5zm-159.3-310.7c42.3-50.7 73.4-121.5 73.4-192.3 0-9.7-.6-19.4-2.6-27.5C628.4 12.7 547.5 53.8 496.6 118.7c-39.5 46.8-74.8 117.6-74.8 189.6 0 10.9.6 21.9 2.6 30 4.5.6 9.7 1.3 14.9 1.3 52.8 0 126.8-38.9 168.9-108.7z"/></svg>
+      Continuar com Apple
+    </button>
+    <div style="font-size:11px;color:#a0b0c8;line-height:1.6;">Os teus dados ficam guardados em segurança<br>e sincronizados em todos os dispositivos.</div>
+  </div>
+</div>
+<!-- APP ROOT -->
+<div id="appRoot" style="display:none;">
+
+<nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Conta"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- Gemini Key modal removed - key stored in Firestore --><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
  Atualizar Dados
  </button></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 20</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 20 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Ainda sem scan — vai ao separador Scanner para analisar</div></div><button onclick="goTab('scanner')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Novo Scanner</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Vai ao separador Scanner e clica em "Iniciar Scanner"</div><button class="tbl-scan-btn" onclick="goTab('scanner')">Ir para o Scanner</button></td></tr></tbody></table></div></div></div><!-- SCANNER --><div class="page" id="page-scanner"><div class="scanner-hero"><div class="sh-top"><div><div class="sh-eyebrow">Warren Buffett Method · Google Gemini + Google Search</div><div class="sh-title">Scanner Automático de Mercado</div><div class="sh-sub">Fase 1: IA filtra 40 candidatos de 800+ ações. Fase 2: análise profunda com dados reais. Resultado: Top 20 oportunidades.</div><div class="sh-stats"><div class="sh-stat"><div class="sh-stat-n">800+</div><div class="sh-stat-l">Ações monitorizadas</div></div><div class="sh-stat"><div class="sh-stat-n">2</div><div class="sh-stat-l">Fases de análise</div></div><div class="sh-stat"><div class="sh-stat-n">Top 20</div><div class="sh-stat-l">Melhores oportunidades</div></div></div></div><button class="scan-btn" id="scanBtn" onclick="startScan()">
  Iniciar Scanner
@@ -308,7 +330,8 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAAZQxifNFbzmsc9pTiiiS56KHdd0owtJ0",
@@ -321,40 +344,68 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
-
-// User ID - use a fixed key per browser (stored in localStorage as fallback)
-// Simple approach: one shared document per "session key"
-// User can set their own session key to sync across devices
-function getSessionKey(){
-  let k = localStorage.getItem('bfa_session');
-  if(!k){ k = 'user_' + Math.random().toString(36).slice(2,10); localStorage.setItem('bfa_session',k); }
-  return k;
-}
+const auth = getAuth(fbApp);
 
 window.DB = {
   async save(collection_name, data){
     try{
-      const key = getSessionKey();
-      await setDoc(doc(db, collection_name, key), { data: JSON.stringify(data), updatedAt: new Date().toISOString() });
+      const uid = auth.currentUser?.uid;
+      if(!uid) return false;
+      await setDoc(doc(db, collection_name, uid), { data: JSON.stringify(data), updatedAt: new Date().toISOString() });
       return true;
     }catch(e){ console.warn('Firebase save error:', e.message); return false; }
   },
   async load(collection_name){
     try{
-      const key = getSessionKey();
-      const snap = await getDoc(doc(db, collection_name, key));
+      const uid = auth.currentUser?.uid;
+      if(!uid) return null;
+      const snap = await getDoc(doc(db, collection_name, uid));
       if(snap.exists()) return JSON.parse(snap.data().data);
       return null;
     }catch(e){ console.warn('Firebase load error:', e.message); return null; }
-  },
-  getSessionKey,
-  setSessionKey(k){
-    localStorage.setItem('bfa_session', k);
-    window.location.reload();
   }
 };
 
-console.log('Firebase initialized, session:', getSessionKey());
+window.AUTH = {
+  async loginGoogle(){
+    const provider = new GoogleAuthProvider();
+    try{ await signInWithPopup(auth, provider); }
+    catch(e){ console.error('Google login error:', e.message); alert('Erro ao entrar com Google: ' + e.message); }
+  },
+  async loginApple(){
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('name');
+    provider.addScope('email');
+    try{ await signInWithPopup(auth, provider); }
+    catch(e){ console.error('Apple login error:', e.message); alert('Erro ao entrar com Apple: ' + e.message); }
+  },
+  async logout(){
+    await signOut(auth);
+  }
+};
+
+onAuthStateChanged(auth, function(user){
+  if(user){
+    window._authUser = user;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appRoot').style.display = 'block';
+    // Update user avatar/name in nav
+    var uname = document.getElementById('navUserName');
+    var uavatar = document.getElementById('navUserAvatar');
+    if(uname) uname.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email || 'Utilizador';
+    if(uavatar){
+      if(user.photoURL){ uavatar.innerHTML='<img src="'+user.photoURL+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover"/>'; }
+      else{ uavatar.textContent = (user.displayName||user.email||'U')[0].toUpperCase(); }
+    }
+    if(window._appReady){ window.initApp(); } else { window._pendingInit = true; }
+  } else {
+    window._authUser = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appRoot').style.display = 'none';
+  }
+});
+
+console.log('Firebase Auth initialized');
 </script>
 
 <script>
@@ -378,22 +429,13 @@ var scanResults=[];
 var activeFilter='all',activeSort='rank';
 var chartScore=null,chartMos=null,dashScoreChart=null,dashMosChart=null;
 
-// ── API KEY ──
+// ── API KEY (stored in Firestore, no UI modal) ──
 function getKey(){return LS.g(K.key)||'';}
-function openModal(){document.getElementById('apiInput').value=getKey();document.getElementById('modal').style.display='flex';}
-function closeModal(){document.getElementById('modal').style.display='none';}
-function saveKey(){
-  var k=document.getElementById('apiInput').value.trim();
-  if(!k)return;
-  LS.s(K.key,k);
-  closeModal();
-  updatePill();
-}
-function updatePill(){
-  var el=document.getElementById('apiPill');
-  if(getKey()){el.textContent='Gemini OK';el.className='api-pill api-ok';}
-  else{el.textContent='Gemini Key';el.className='api-pill api-bad';}
-}
+function openModal(){} // no-op, key managed via Firestore
+function closeModal(){}
+function saveKey(){}
+function updatePill(){} // no pill in nav anymore
+function updateSyncStatus(status){}
 
 // ── TABS ──
 function goTab(t){
@@ -537,41 +579,7 @@ function updateSyncStatus(status){
   el.style.color=colors[status]||'var(--muted)';
 }
 
-function openSyncModal(){
-  var key=window.DB?window.DB.getSessionKey():'sem firebase';
-  var newKey=prompt('Chave de sync actual: '+key+'. Para sincronizar noutro dispositivo usa esta chave. Nova chave (cancela para manter):');
-  if(newKey&&newKey.trim()&&newKey.trim()!==key){
-    if(window.DB)window.DB.setSessionKey(newKey.trim());
-  }
-}
-
-// ── EXPORT/IMPORT ──
-function exportSettings(){
-  var data={version:1,exportedAt:new Date().toISOString(),apiKey:getKey(),portfolio:portfolio,lastScan:lastScan};
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='buffett-backup-'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();URL.revokeObjectURL(url);
-}
-function importSettings(event){
-  var file=event.target.files[0];if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      var data=JSON.parse(e.target.result);
-      if(data.apiKey){LS.s(K.key,data.apiKey);updatePill();}
-      if(data.portfolio&&data.portfolio.length){portfolio=data.portfolio;LS.s(K.port,portfolio);}
-      if(data.lastScan){lastScan=data.lastScan;LS.s(K.scan,data.lastScan);if(lastScan.results)scanResults=lastScan.results;}
-      alert('Importado: '+portfolio.length+' acoes, chave Gemini, ultimo scan.');
-      renderPortfolio();
-      if(scanResults.length){renderTopTable();refreshDashboardCharts();updateQuickStats();}
-      initDashboard();
-    }catch(err){alert('Erro ao importar: '+err.message);}
-  };
-  reader.readAsText(file);
-  event.target.value='';
-}
+// openSyncModal, exportSettings, importSettings removed - auth via Google/Apple
 
 // ── DASHBOARD ──
 function initDashboard(){
@@ -654,7 +662,7 @@ function refreshDashboardCharts(){
 }
 
 async function loadDashboard(){
-  if(!getKey()){openModal();return;}
+  if(!getKey()){alert('Gemini API Key não configurada. Contacta o administrador.');return;}
   var btn=document.getElementById('dashRefreshBtn');
   if(btn){btn.disabled=true;btn.textContent='A carregar...';}
   await loadIndices();
@@ -722,7 +730,7 @@ function renderIndices(data){
 
 // ── SCANNER ──
 async function startScan(){
-  if(!getKey()){openModal();return;}
+  if(!getKey()){alert('Gemini API Key não configurada. Contacta o administrador.');return;}
   var btn=document.getElementById('scanBtn');
   if(btn){btn.disabled=true;btn.textContent='A analisar...';}
   var errEl=document.getElementById('scanErr');if(errEl)errEl.style.display='none';
@@ -1032,7 +1040,7 @@ async function fetchStock(ticker){
 }
 
 async function refreshAll(){
-  if(!getKey()){openModal();return;}
+  if(!getKey()){alert('Gemini API Key não configurada. Contacta o administrador.');return;}
   var btn=document.getElementById('refreshAllBtn');
   if(btn){btn.disabled=true;btn.textContent='A atualizar...';}
   // Refresh sequentially to avoid rate limits
@@ -1044,29 +1052,29 @@ async function refreshAll(){
 
 // ── INIT ──
 async function initApp(){
+  // Reset state for fresh load per user
+  portfolio = [];
+  lastScan = null;
+  scanResults = [];
+
   // Show loading overlay while Firebase loads
   showLoadingOverlay(true);
-  updatePill();
 
   if(window.DB){
-    updateSyncStatus('syncing');
     try{
-      console.log('Loading from Firebase, session:', window.DB.getSessionKey());
+      console.log('Loading from Firebase for user:', window._authUser?.uid);
       var results=await Promise.all([
         window.DB.load(K.key),
         window.DB.load(K.port),
         window.DB.load(K.scan)
       ]);
       var fbKey=results[0], fbPort=results[1], fbScan=results[2];
-      console.log('Firebase results - key:', !!fbKey, 'portfolio:', fbPort&&fbPort.length, 'scan:', fbScan&&fbScan.results&&fbScan.results.length);
 
       if(fbKey){
         var keyStr=typeof fbKey==='string'?fbKey:JSON.stringify(fbKey);
-        // Remove extra quotes if double-encoded
         if(keyStr.startsWith('"')&&keyStr.endsWith('"')) keyStr=JSON.parse(keyStr);
         localStorage.setItem(K.key, JSON.stringify(keyStr));
-        updatePill();
-        console.log('API key restored, length:', keyStr.length);
+        console.log('API key restored');
       }
       if(fbPort&&Array.isArray(fbPort)&&fbPort.length){
         portfolio=fbPort;
@@ -1079,10 +1087,8 @@ async function initApp(){
         scanResults=fbScan.results;
         console.log('Scan restored:', scanResults.length, 'results');
       }
-      updateSyncStatus((fbPort&&fbPort.length)||fbScan?'loaded':'synced');
     }catch(e){
       console.error('Firebase load error:', e.message);
-      updateSyncStatus('error');
     }
   }
 
@@ -1109,22 +1115,21 @@ function showLoadingOverlay(show){
     el=document.createElement('div');
     el.id='loadingOverlay';
     el.style.cssText='position:fixed;inset:0;background:rgba(244,247,252,0.95);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:Inter,system-ui,sans-serif;';
-    el.innerHTML='<div style="width:36px;height:36px;border:3px solid #dbe8ff;border-top-color:#1a56db;border-radius:50%;animation:spin .7s linear infinite"></div><div style="font-size:14px;font-weight:600;color:#3d5a8a">A carregar dados...</div><div style="font-size:12px;color:#7a94bd">Firebase a sincronizar</div>';
+    el.innerHTML='<div style="width:36px;height:36px;border:3px solid #dbe8ff;border-top-color:#1a56db;border-radius:50%;animation:spin .7s linear infinite"></div><div style="font-size:14px;font-weight:600;color:#3d5a8a">A carregar dados...</div><div style="font-size:12px;color:#7a94bd">A sincronizar com a tua conta</div>';
     document.body.appendChild(el);
   }
   el.style.display=show?'flex':'none';
 }
 
-function waitForDB(retries){
-  if(window.DB){initApp();}
-  else if(retries>0){setTimeout(function(){waitForDB(retries-1);},150);}
-  else{
-    console.warn('Firebase not available, using localStorage only');
-    initApp();
-  }
+// Signal to auth listener that app JS is ready
+window._appReady = true;
+if(window._pendingInit){
+  window._pendingInit = false;
+  initApp();
 }
-waitForDB(20);
 
 </script>
+
+</div><!-- /appRoot -->
 </body>
 </html>
