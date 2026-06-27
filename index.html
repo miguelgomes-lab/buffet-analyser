@@ -842,16 +842,18 @@ async function loadIndices(){
   var grid=document.getElementById('indicesGrid');
   if(grid)grid.innerHTML='<div class="idx-card idx-sp" style="grid-column:1/-1"><div class="idx-loading"><div class="spin"></div> A carregar indices...</div></div>';
   try{
-    // Call 1: indices only
     var today=new Date().toISOString().slice(0,10);
-    var p1='Today is '+today+'. Provide your best estimate of current market values. Return ONLY valid JSON, no extra text: {"sp500":{"value":5800,"weekly":1.2,"monthly":-0.5,"yearly":18.3,"ytd":12.1},"nasdaq":{"value":18500,"weekly":0.8,"monthly":-1.2,"yearly":22.1,"ytd":15.3},"dowjones":{"value":43000,"weekly":0.5,"monthly":0.2,"yearly":14.2,"ytd":8.1}} Fill with your best knowledge of current S&P500, Nasdaq, Dow Jones values and their approximate weekly/monthly/yearly/YTD % changes. Use realistic recent values.';
+    // Generate last 12 month labels
+    var months=[];
+    for(var m=11;m>=0;m--){var d=new Date();d.setDate(1);d.setMonth(d.getMonth()-m);months.push(d.toISOString().slice(0,7));}
+    var p1='Today is '+today+'. Return ONLY valid JSON with realistic historical and current values for S&P500, Nasdaq, Dow Jones. Include monthly closing values for the last 12 months ('+months.join(',')+') and current stats. Format: {"sp500":{"value":5950,"weekly":0.6,"monthly":2.1,"yearly":14.2,"ytd":5.8,"history":[4800,4900,4950,5000,5100,5200,5300,5350,5400,5500,5750,5950]},"nasdaq":{"value":19200,"weekly":0.4,"monthly":1.8,"yearly":18.5,"ytd":7.2,"history":[14500,14800,15000,15200,15500,15800,16200,16500,17000,17500,18500,19200]},"dowjones":{"value":43500,"weekly":0.3,"monthly":1.2,"yearly":12.1,"ytd":4.1,"history":[37000,37500,38000,38500,39000,39500,40000,40500,41000,41500,42500,43500]}} Use your best knowledge of actual market data for these months.';
     var r1=await callGeminiRaw(p1,false);
     var d1=parseJSON(r1);
-    // Call 2: commodities
-    var p2='Today is '+today+'. Return ONLY valid JSON: {"vix":18.5,"oil":72.3,"gold":2350,"btc":65000} Fill with your best knowledge of current VIX index, WTI crude oil price USD/barrel, Gold spot price USD/oz, Bitcoin USD price.';
+    var p2='Today is '+today+'. Return ONLY valid JSON: {"vix":18.5,"oil":72.3,"gold":2350,"btc":65000} Fill with current VIX, WTI oil USD/barrel, Gold USD/oz, Bitcoin USD.';
     var r2=await callGeminiRaw(p2,false);
     var d2=parseJSON(r2);
-    var data=Object.assign({},d1,d2);
+    var months12=months;
+    var data=Object.assign({},d1,d2,{months:months12});
     LS.s(K.idx,{date:new Date().toISOString(),data:data});
     renderIndices(data);
     var lu=document.getElementById('idxLastUpd');
@@ -865,34 +867,46 @@ async function loadIndices(){
 function renderIndices(data){
   function fv(v){return v>=1000?Math.round(v).toLocaleString('pt-PT'):v!=null?v.toFixed(2):'—';}
   function fp(v){if(v==null)return{str:'—',cls:'c-flat'};return{str:(v>0?'+':'')+v.toFixed(2)+'%',cls:v>0?'c-up':v<0?'c-dn':'c-flat'};}
-  function buildIdx(cls,name,tick,d){
+  var months=data&&data.months||[];
+  var mlabels=months.map(function(m){var p=m.split('-');return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(p[1])-1];});
+  function buildIdx(cls,name,tick,d,chartId,color){
     var w=fp(d&&d.weekly),mo=fp(d&&d.monthly),y=fp(d&&d.yearly),ytd=fp(d&&d.ytd);
-    return '<div class="idx-card '+cls+'">'
-      +'<button class="idx-refresh-btn" onclick="loadIndices()">Atualizar</button>'
-      +'<div class="idx-name">'+name+' <span style="font-family:JetBrains Mono,monospace;font-size:10px">'+tick+'</span></div>'
-      +'<div class="idx-val">'+fv(d&&d.value)+'</div>'
-      +'<div class="idx-periods">'
-        +'<div class="idx-period"><div class="idx-p-label">Semanal</div><div class="idx-p-val '+w.cls+'">'+w.str+'</div></div>'
-        +'<div class="idx-period"><div class="idx-p-label">Mensal</div><div class="idx-p-val '+mo.cls+'">'+mo.str+'</div></div>'
-        +'<div class="idx-period"><div class="idx-p-label">Anual</div><div class="idx-p-val '+y.cls+'">'+y.str+'</div></div>'
-      +'</div>'
-      +'<div class="idx-ytd">YTD: <span class="'+ytd.cls+'" style="font-weight:700">'+ytd.str+'</span></div>'
-      +'</div>';
+    return '<div class="idx-card '+cls+'">'      +'<button class="idx-refresh-btn" onclick="loadIndices()">Atualizar</button>'      +'<div class="idx-name">'+name+' <span style="font-family:JetBrains Mono,monospace;font-size:10px">'+tick+'</span></div>'      +'<div class="idx-val">'+fv(d&&d.value)+'</div>'      +'<div class="idx-periods">'        +'<div class="idx-period"><div class="idx-p-label">Semanal</div><div class="idx-p-val '+w.cls+'">'+w.str+'</div></div>'        +'<div class="idx-period"><div class="idx-p-label">Mensal</div><div class="idx-p-val '+mo.cls+'">'+mo.str+'</div></div>'        +'<div class="idx-period"><div class="idx-p-label">Anual</div><div class="idx-p-val '+y.cls+'">'+y.str+'</div></div>'      +'</div>'      +'<div class="idx-ytd">YTD: <span class="'+ytd.cls+'" style="font-weight:700">'+ytd.str+'</span></div>'      +(d&&d.history&&d.history.length        ?'<div style="margin-top:14px;"><div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;">VARIAÇÃO 12 MESES</div><div style="position:relative;height:70px;"><canvas id="'+chartId+'" height="70"></canvas></div></div>'        :'')      +'</div>';
   }
   var grid=document.getElementById('indicesGrid');
-  if(grid)grid.innerHTML=buildIdx('idx-sp','S&P 500','^GSPC',data&&data.sp500)+buildIdx('idx-nq','Nasdaq','^IXIC',data&&data.nasdaq)+buildIdx('idx-dj','Dow Jones','^DJI',data&&data.dowjones);
-  var strip=document.getElementById('marketStrip');
-  if(!strip){
-    strip=document.createElement('div');strip.id='marketStrip';strip.className='market-strip';
-    var ig=document.getElementById('indicesGrid');if(ig)ig.parentNode.insertBefore(strip,ig.nextSibling);
-  }
-  if(data&&strip){
-    strip.innerHTML='<div class="mstrip-item"><div><div class="mstrip-label">VIX</div><div class="mstrip-val" style="color:'+(data.vix>25?'var(--red)':data.vix>15?'var(--amber)':'var(--green)')+'">'+((data.vix||0).toFixed(1))+'</div></div></div>'
-      +'<div class="mstrip-item"><div><div class="mstrip-label">Petroleo WTI</div><div class="mstrip-val">$'+((data.oil||0).toFixed(1))+'</div></div></div>'
-      +'<div class="mstrip-item"><div><div class="mstrip-label">Ouro</div><div class="mstrip-val">$'+Math.round(data.gold||0).toLocaleString('pt-PT')+'</div></div></div>'
-      +'<div class="mstrip-item"><div><div class="mstrip-label">Bitcoin</div><div class="mstrip-val">$'+Math.round(data.btc||0).toLocaleString('pt-PT')+'</div></div></div>';
-  }
-}
+  if(grid)grid.innerHTML=buildIdx('idx-sp','S&P 500','^GSPC',data&&data.sp500,'idxChart_sp','#1a56db')+buildIdx('idx-nq','Nasdaq','^IXIC',data&&data.nasdaq,'idxChart_nq','#7c3aed')+buildIdx('idx-dj','Dow Jones','^DJI',data&&data.dowjones,'idxChart_dj','#0891b2');
+  setTimeout(function(){
+    function drawIdxChart(canvasId,history,color){
+      var canvas=document.getElementById(canvasId);
+      if(!canvas||!history||!history.length)return;
+      var existing=Chart.getChart(canvas);if(existing)existing.destroy();
+      var gradColor=(history[history.length-1]>=history[0])?color:'#dc2626';
+      new Chart(canvas,{
+        type:'line',
+        data:{
+          labels:mlabels.length?mlabels:history.map(function(_,i){return i+1;}),
+          datasets:[{data:history,borderColor:gradColor,borderWidth:2,pointRadius:0,pointHoverRadius:4,pointHoverBackgroundColor:gradColor,tension:0.3,fill:true,
+            backgroundColor:function(ctx){var g=ctx.chart.ctx.createLinearGradient(0,0,0,70);g.addColorStop(0,gradColor+'33');g.addColorStop(1,gradColor+'00');return g;}
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,animation:{duration:600},
+          interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{display:false},
+            tooltip:{backgroundColor:'rgba(13,27,46,0.9)',titleColor:'#fff',bodyColor:'#a0b0c8',padding:8,cornerRadius:6,
+              callbacks:{title:function(i){return mlabels[i[0].dataIndex]||'';},label:function(i){return ' '+Math.round(i.raw).toLocaleString('pt-PT');}}}
+          },
+          scales:{x:{display:false},y:{display:false,grace:'5%'}}
+        }
+      });
+    }
+    if(data){
+      if(data.sp500&&data.sp500.history)drawIdxChart('idxChart_sp',data.sp500.history,'#1a56db');
+      if(data.nasdaq&&data.nasdaq.history)drawIdxChart('idxChart_nq',data.nasdaq.history,'#7c3aed');
+      if(data.dowjones&&data.dowjones.history)drawIdxChart('idxChart_dj',data.dowjones.history,'#0891b2');
+    }
+  },150);
 
 // ── SCANNER ──
 async function startScan(){
