@@ -667,18 +667,24 @@ async function loadIndices(){
   var age=cached?(Date.now()-new Date(cached.date).getTime())/60000:999;
   if(cached&&age<60){renderIndices(cached.data);return;}
   var grid=document.getElementById('indicesGrid');
-  if(grid)grid.innerHTML='<div class="idx-card idx-sp" style="grid-column:1/-1"><div class="idx-loading"><div class="spin"></div> A carregar indices de mercado...</div></div>';
-  var prompt='Search Google for live market data today. Get current values for: S&P 500 (value, weekly%, monthly%, yearly%, YTD%), Nasdaq Composite (same), Dow Jones (same), VIX index, WTI oil USD/barrel, Gold spot USD/oz, Bitcoin USD. Return ONLY this JSON: {"sp500":{"value":5800,"weekly":1.2,"monthly":-0.5,"yearly":18.3,"ytd":12.1},"nasdaq":{"value":18500,"weekly":0.8,"monthly":-1.2,"yearly":22.1,"ytd":15.3},"dowjones":{"value":43000,"weekly":0.5,"monthly":0.2,"yearly":14.2,"ytd":8.1},"vix":18.5,"oil":72.3,"gold":2350,"btc":65000}';
+  if(grid)grid.innerHTML='<div class="idx-card idx-sp" style="grid-column:1/-1"><div class="idx-loading"><div class="spin"></div> A carregar indices...</div></div>';
   try{
-    var raw=await callGeminiRaw(prompt,true);
-    var data=parseJSON(raw);
+    // Call 1: indices only
+    var p1='Search Google for TODAY live values. Return ONLY JSON no extra text: {"sp500":{"value":5800,"weekly":1.2,"monthly":-0.5,"yearly":18.3,"ytd":12.1},"nasdaq":{"value":18500,"weekly":0.8,"monthly":-1.2,"yearly":22.1,"ytd":15.3},"dowjones":{"value":43000,"weekly":0.5,"monthly":0.2,"yearly":14.2,"ytd":8.1}} Fill with real current S&P500, Nasdaq, Dow Jones values and their weekly/monthly/yearly/YTD % changes.';
+    var r1=await callGeminiRaw(p1,true);
+    var d1=parseJSON(r1);
+    // Call 2: commodities
+    var p2='Search Google for TODAY prices. Return ONLY JSON: {"vix":18.5,"oil":72.3,"gold":2350,"btc":65000} Fill with real current VIX, WTI oil USD/barrel, Gold USD/oz, Bitcoin USD.';
+    var r2=await callGeminiRaw(p2,true);
+    var d2=parseJSON(r2);
+    var data=Object.assign({},d1,d2);
     LS.s(K.idx,{date:new Date().toISOString(),data:data});
     renderIndices(data);
     var lu=document.getElementById('idxLastUpd');
     if(lu)lu.textContent='Atualizado: '+new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
     var g=document.getElementById('indicesGrid');
-    if(g)g.innerHTML='<div class="idx-card idx-sp" style="grid-column:1/-1;border-top-color:var(--red)"><div style="color:var(--red);font-size:12px;padding:8px 0">Erro ao carregar indices: '+e.message+'</div></div>';
+    if(g)g.innerHTML='<div class="idx-card idx-sp" style="grid-column:1/-1;border-top-color:var(--red)"><div style="color:var(--red);font-size:12px;padding:8px 0">Erro: '+e.message+'</div></div>';
   }
 }
 
