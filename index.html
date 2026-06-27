@@ -327,22 +327,89 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 
 <nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div id="navUserAvatar" onclick="openSettingsModal()" style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;overflow:hidden;" title="Definições"></div><span id="navUserName" style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;" onclick="openSettingsModal()"></span><button onclick="window.AUTH.logout()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted)">Sair</button></div></nav><!-- Gemini Key modal removed - key stored in Firestore -->
 <!-- SETTINGS MODAL -->
-<div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(13,27,46,0.6);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)closeSettingsModal()">
-  <div style="background:#fff;border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+<div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(13,27,46,0.6);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0;" onclick="if(event.target===this)closeSettingsModal()">
+  <div style="background:#fff;border-radius:16px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.25);margin:auto;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 24px 0;">
       <div style="font-size:16px;font-weight:800;color:#0d1b2e;">Definições</div>
-      <button onclick="closeSettingsModal()" style="background:none;border:none;font-size:20px;color:#6b84a8;cursor:pointer;line-height:1;">×</button>
+      <button onclick="closeSettingsModal()" style="background:none;border:none;font-size:22px;color:#6b84a8;cursor:pointer;line-height:1;">×</button>
     </div>
-    <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Gemini API Key</div>
-    <div style="font-size:11px;color:#6b84a8;margin-bottom:10px;">Obtém a tua key em <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#1a56db;">aistudio.google.com</a>. Fica guardada de forma segura na tua conta.</div>
-    <div style="display:flex;gap:8px;margin-bottom:20px;">
-      <input id="settingsKeyInput" type="password" placeholder="AIza..." style="flex:1;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:13px;outline:none;font-family:Inter,sans-serif;"/>
-      <button onclick="toggleSettingsKeyVisibility()" id="settingsKeyToggle" style="padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;cursor:pointer;font-size:14px;">👁</button>
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;padding:16px 24px 0;border-bottom:1px solid #e2e8f4;">
+      <button onclick="switchSettingsTab('api')" id="stab-api" style="padding:8px 14px;border:none;border-bottom:2px solid #1a56db;background:none;font-size:12px;font-weight:700;color:#1a56db;cursor:pointer;">API Key</button>
+      <button onclick="switchSettingsTab('method')" id="stab-method" style="padding:8px 14px;border:none;border-bottom:2px solid transparent;background:none;font-size:12px;font-weight:600;color:#6b84a8;cursor:pointer;">Método de Análise</button>
+      <button onclick="switchSettingsTab('tickers')" id="stab-tickers" style="padding:8px 14px;border:none;border-bottom:2px solid transparent;background:none;font-size:12px;font-weight:600;color:#6b84a8;cursor:pointer;">Tickers</button>
     </div>
-    <div id="settingsKeyStatus" style="font-size:11px;color:#6b84a8;margin-bottom:16px;min-height:16px;"></div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="closeSettingsModal()" style="flex:1;padding:10px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;font-size:13px;font-weight:600;cursor:pointer;color:#344f73;">Cancelar</button>
-      <button onclick="saveSettingsKey()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#1a56db;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>
+
+    <!-- TAB: API KEY -->
+    <div id="stab-content-api" style="padding:22px 24px;">
+      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Gemini API Key</div>
+      <div style="font-size:11px;color:#6b84a8;margin-bottom:10px;">Obtém a tua key em <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#1a56db;">aistudio.google.com</a>. Fica guardada de forma segura na tua conta.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="settingsKeyInput" type="password" placeholder="AIza..." style="flex:1;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:13px;outline:none;font-family:Inter,sans-serif;"/>
+        <button onclick="toggleSettingsKeyVisibility()" style="padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;cursor:pointer;font-size:14px;">👁</button>
+      </div>
+      <div id="settingsKeyStatus" style="font-size:11px;color:#6b84a8;margin-bottom:16px;min-height:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="closeSettingsModal()" style="flex:1;padding:10px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;font-size:13px;font-weight:600;cursor:pointer;color:#344f73;">Cancelar</button>
+        <button onclick="saveSettingsKey()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#1a56db;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar</button>
+      </div>
+    </div>
+
+    <!-- TAB: MÉTODO DE ANÁLISE -->
+    <div id="stab-content-method" style="padding:22px 24px;display:none;">
+      <div style="font-size:11px;color:#6b84a8;margin-bottom:16px;">Critérios base do método Buffett. Altera os mínimos ou adiciona regras personalizadas que serão incluídas na análise da IA.</div>
+
+      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:12px;">Critérios base</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">ROE mínimo (%)</div>
+          <input id="cfg-roe" type="number" value="15" min="0" max="100" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Margem líquida mín. (%)</div>
+          <input id="cfg-margin" type="number" value="15" min="0" max="100" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">P/E máximo</div>
+          <input id="cfg-pe" type="number" value="25" min="0" max="200" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Dívida máx. (anos FCF)</div>
+          <input id="cfg-debt" type="number" value="3" min="0" max="20" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Moat mínimo (0-10)</div>
+          <input id="cfg-moat" type="number" value="7" min="0" max="10" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Margem segurança mín. (%)</div>
+          <input id="cfg-mos" type="number" value="20" min="0" max="80" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
+        </div>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Regras personalizadas</div>
+      <div style="font-size:11px;color:#6b84a8;margin-bottom:8px;">Escreve instruções adicionais para a IA seguir na análise (ex: "prefere empresas com dividendos crescentes há +10 anos", "ignora empresas de tecnologia especulativa").</div>
+      <textarea id="cfg-rules" rows="4" placeholder="Ex: Prioriza empresas com histórico de dividendos crescentes. Penaliza empresas com exposição elevada à China. Favorece setores defensivos em períodos de recessão." style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:12px;font-family:Inter,sans-serif;outline:none;resize:vertical;color:#344f73;line-height:1.5;"></textarea>
+
+      <div id="settingsMethodStatus" style="font-size:11px;color:#6b84a8;margin:10px 0 0;min-height:16px;"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button onclick="resetMethodDefaults()" style="flex:1;padding:10px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;font-size:12px;font-weight:600;cursor:pointer;color:#344f73;">Repor padrão</button>
+        <button onclick="saveMethodSettings()" style="flex:2;padding:10px;border:none;border-radius:8px;background:#1a56db;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar Método</button>
+      </div>
+    </div>
+
+    <!-- TAB: TICKERS -->
+    <div id="stab-content-tickers" style="padding:22px 24px;display:none;">
+      <div style="font-size:11px;color:#6b84a8;margin-bottom:14px;">Adiciona tickers extra ao universo de análise do Scanner (além dos S&P500, Nasdaq, Dow Jones e Dividend Aristocrats já incluídos).</div>
+      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Tickers adicionais</div>
+      <textarea id="cfg-tickers" rows="4" placeholder="Ex: NOVO-B, ASML, TSM, BABA, NVO (separados por vírgula ou espaço)" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:12px;font-family:Inter,sans-serif;outline:none;resize:vertical;color:#344f73;line-height:1.5;text-transform:uppercase;"></textarea>
+      <div style="font-size:10px;color:#a0b0c8;margin-top:6px;">Tickers no universo atual: <span id="tickerCount">—</span></div>
+      <div id="settingsTickerStatus" style="font-size:11px;color:#6b84a8;margin:10px 0 0;min-height:16px;"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button onclick="closeSettingsModal()" style="flex:1;padding:10px;border:1.5px solid #e2e8f4;border-radius:8px;background:#f4f7fc;font-size:13px;font-weight:600;cursor:pointer;color:#344f73;">Cancelar</button>
+        <button onclick="saveTickerSettings()" style="flex:2;padding:10px;border:none;border-radius:8px;background:#1a56db;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Guardar Tickers</button>
+      </div>
     </div>
   </div>
 </div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
@@ -473,14 +540,88 @@ function updatePill(){} // no pill in nav anymore
 function updateSyncStatus(status){}
 
 // ── SETTINGS MODAL ──
+var _settingsCurrentTab = 'api';
+
+// Default method config
+var METHOD_DEFAULTS = { roe:15, margin:15, pe:25, debt:3, moat:7, mos:20, rules:'' };
+
+function getMethodConfig(){
+  return LS.g('bfa_method') || Object.assign({}, METHOD_DEFAULTS);
+}
+
+function switchSettingsTab(tab){
+  ['api','method','tickers'].forEach(function(t){
+    var btn = document.getElementById('stab-'+t);
+    var content = document.getElementById('stab-content-'+t);
+    var isActive = t === tab;
+    if(btn){ btn.style.borderBottomColor = isActive ? '#1a56db' : 'transparent'; btn.style.color = isActive ? '#1a56db' : '#6b84a8'; btn.style.fontWeight = isActive ? '700' : '600'; }
+    if(content) content.style.display = isActive ? 'block' : 'none';
+  });
+  _settingsCurrentTab = tab;
+  if(tab === 'method') loadMethodTab();
+  if(tab === 'tickers') loadTickersTab();
+}
+
+function loadMethodTab(){
+  var cfg = getMethodConfig();
+  document.getElementById('cfg-roe').value = cfg.roe;
+  document.getElementById('cfg-margin').value = cfg.margin;
+  document.getElementById('cfg-pe').value = cfg.pe;
+  document.getElementById('cfg-debt').value = cfg.debt;
+  document.getElementById('cfg-moat').value = cfg.moat;
+  document.getElementById('cfg-mos').value = cfg.mos;
+  document.getElementById('cfg-rules').value = cfg.rules || '';
+}
+
+function loadTickersTab(){
+  var extra = LS.g('bfa_extra_tickers') || [];
+  document.getElementById('cfg-tickers').value = extra.join(', ');
+  document.getElementById('tickerCount').textContent = ALL_T.length + (extra.length ? ' + ' + extra.length + ' extra' : '');
+}
+
+function resetMethodDefaults(){
+  var cfg = Object.assign({}, METHOD_DEFAULTS);
+  LS.s('bfa_method', cfg);
+  loadMethodTab();
+  var st = document.getElementById('settingsMethodStatus');
+  if(st){ st.textContent = 'Reposto para valores padrão.'; st.style.color='#6b84a8'; }
+}
+
+async function saveMethodSettings(){
+  var cfg = {
+    roe: parseFloat(document.getElementById('cfg-roe').value) || 15,
+    margin: parseFloat(document.getElementById('cfg-margin').value) || 15,
+    pe: parseFloat(document.getElementById('cfg-pe').value) || 25,
+    debt: parseFloat(document.getElementById('cfg-debt').value) || 3,
+    moat: parseFloat(document.getElementById('cfg-moat').value) || 7,
+    mos: parseFloat(document.getElementById('cfg-mos').value) || 20,
+    rules: document.getElementById('cfg-rules').value.trim()
+  };
+  LS.s('bfa_method', cfg);
+  var ok = await window.DB.save('bfa_method', cfg);
+  var st = document.getElementById('settingsMethodStatus');
+  if(st){ st.textContent = ok ? '✓ Método guardado!' : '✓ Guardado localmente.'; st.style.color='#16a34a'; }
+  setTimeout(function(){ closeSettingsModal(); }, 1000);
+}
+
+async function saveTickerSettings(){
+  var raw = document.getElementById('cfg-tickers').value;
+  var tickers = raw.split(/[\s,;]+/).map(function(t){ return t.trim().toUpperCase(); }).filter(Boolean);
+  LS.s('bfa_extra_tickers', tickers);
+  var ok = await window.DB.save('bfa_extra_tickers', tickers);
+  var st = document.getElementById('settingsTickerStatus');
+  if(st){ st.textContent = ok ? '✓ ' + tickers.length + ' tickers guardados!' : '✓ Guardado localmente.'; st.style.color='#16a34a'; }
+  setTimeout(function(){ closeSettingsModal(); }, 1000);
+}
+
 function openSettingsModal(){
   var input = document.getElementById('settingsKeyInput');
   var status = document.getElementById('settingsKeyStatus');
   var current = getKey();
   if(current){ input.value = current; status.textContent = '✓ Key configurada (' + current.length + ' caracteres)'; status.style.color='#16a34a'; }
   else { input.value = ''; status.textContent = 'Sem key configurada — a app não funciona sem ela.'; status.style.color='#dc2626'; }
+  switchSettingsTab('api');
   document.getElementById('settingsModal').style.display = 'flex';
-  setTimeout(function(){ input.focus(); }, 100);
 }
 function closeSettingsModal(){
   document.getElementById('settingsModal').style.display = 'none';
@@ -836,8 +977,12 @@ async function startScan(){
 }
 
 async function phase1(){
-  var candidates=['KO','PG','JNJ','MCD','V','MSFT','AAPL','GOOGL','UNH','ABT','TMO','NEE','APD','SHW','CME','SPGI','MA','HD','LOW','COST','AMGN','ACN','DHR','ISRG','BLK','MCO','ADP','ORCL','INTU','ADBE'];
-  var prompt='You are a Warren Buffett expert. From these stocks: '+candidates.join(',')+'. Select the 20 BEST Buffett opportunities based on: high consistent ROE, strong margins, durable moat, low debt, quality business. Return ONLY JSON: {"top40":["TICK1","TICK2",...]} with exactly 20 tickers from the list.';
+  var extraTickers = LS.g('bfa_extra_tickers') || [];
+  var baseCandidates=['KO','PG','JNJ','MCD','V','MSFT','AAPL','GOOGL','UNH','ABT','TMO','NEE','APD','SHW','CME','SPGI','MA','HD','LOW','COST','AMGN','ACN','DHR','ISRG','BLK','MCO','ADP','ORCL','INTU','ADBE'];
+  var candidates = baseCandidates.concat(extraTickers).filter(function(t,i,a){return a.indexOf(t)===i;});
+  var cfg = getMethodConfig();
+  var customRules = cfg.rules ? ' Additional rules: ' + cfg.rules : '';
+  var prompt='You are a Warren Buffett expert. From these stocks: '+candidates.join(',')+'. Select the 20 BEST Buffett opportunities. Criteria: ROE >'+cfg.roe+'%, net margin >'+cfg.margin+'%, P/E <'+cfg.pe+', debt <'+cfg.debt+' years FCF, moat score >'+cfg.moat+'/10, margin of safety >'+cfg.mos+'%.'+customRules+' Return ONLY JSON: {"top40":["TICK1","TICK2",...]} with exactly 20 tickers from the list.';
   try{
     var data=await callGemini(prompt,false);
     var arr=data.top40||data.results||[];
@@ -875,7 +1020,9 @@ async function phase2(tickers){
 }
 
 async function analyzeOne(ticker){
-  var prompt='Analyze stock '+ticker+' as Warren Buffett would. Use training knowledge. Return ONLY JSON: {"ticker":"'+ticker+'","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0}';
+  var cfg2 = getMethodConfig();
+  var customRules2 = cfg2.rules ? ' Extra criteria: ' + cfg2.rules : '';
+  var prompt='Analyze stock '+ticker+' as Warren Buffett would. Score 0-100. Rate COMPRAR only if ROE>'+cfg2.roe+'%, margin>'+cfg2.margin+'%, P/E<'+cfg2.pe+', debt<'+cfg2.debt+'yrs, moat>'+cfg2.moat+'/10, margin_of_safety>'+cfg2.mos+'%.'+customRules2+' Use training knowledge. Return ONLY JSON: {"ticker":"'+ticker+'","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0}';
   var raw=await callGeminiRaw(prompt,false);
   return parseJSON(raw);
 }
@@ -1130,9 +1277,11 @@ async function initApp(){
       var results=await Promise.all([
         window.DB.load(K.key),
         window.DB.load(K.port),
-        window.DB.load(K.scan)
+        window.DB.load(K.scan),
+        window.DB.load('bfa_method'),
+        window.DB.load('bfa_extra_tickers')
       ]);
-      var fbKey=results[0], fbPort=results[1], fbScan=results[2];
+      var fbKey=results[0], fbPort=results[1], fbScan=results[2], fbMethod=results[3], fbExtraTickers=results[4];
 
       if(fbKey){
         var keyStr=typeof fbKey==='string'?fbKey:JSON.stringify(fbKey);
@@ -1151,6 +1300,8 @@ async function initApp(){
         scanResults=fbScan.results;
         console.log('Scan restored:', scanResults.length, 'results');
       }
+      if(fbMethod){ localStorage.setItem('bfa_method', JSON.stringify(fbMethod)); }
+      if(fbExtraTickers&&Array.isArray(fbExtraTickers)){ localStorage.setItem('bfa_extra_tickers', JSON.stringify(fbExtraTickers)); }
     }catch(e){
       console.error('Firebase load error:', e.message);
     }
