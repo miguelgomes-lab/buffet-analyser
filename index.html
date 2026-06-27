@@ -436,10 +436,28 @@ async function discoverModel(key){
     for(var i=0;i<GEMINI_MODELS.length;i++){
       if(available.includes(GEMINI_MODELS[i])){ return GEMINI_MODELS[i]; }
     }
-    // Fallback: use first available model that contains 'flash'
+    // Fallback: use first available flash model
     var flashModel=available.find(function(m){ return m.includes('flash'); });
     return flashModel||available[0]||null;
   }catch(e){ console.warn('Model discovery failed:',e.message); return null; }
+}
+
+// Test if a model supports Google Search grounding
+async function findSearchModel(key, baseModel){
+  // Models known to support grounding - try in order
+  var searchModels=['gemini-2.5-flash-preview-05-20','gemini-2.0-flash-001','gemini-2.0-flash','gemini-1.5-flash-002','gemini-1.5-flash-001'];
+  // First try the base model
+  if(baseModel) searchModels.unshift(baseModel);
+  for(var i=0;i<searchModels.length;i++){
+    var m=searchModels[i];
+    try{
+      var testBody={contents:[{parts:[{text:'What is 2+2? Return only the number.'}]}],tools:[{googleSearch:{}}],generationConfig:{temperature:0,maxOutputTokens:10}};
+      var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(testBody)});
+      if(r.ok){ console.log('Search model found:',m); return m; }
+    }catch(e){}
+  }
+  // Last resort: use base model without search
+  return baseModel;
 }
 
 async function callGeminiRaw(prompt,useSearch){
@@ -450,6 +468,12 @@ async function callGeminiRaw(prompt,useSearch){
     const discovered=await discoverModel(key);
     if(discovered){ _workingModel=discovered; console.log('Auto-selected model:',discovered); }
   }
+  // For search calls, ensure we use a model that supports grounding
+  var modelToUse=_workingModel||GEMINI_MODELS[0];
+  if(useSearch && !window._searchModel){
+    window._searchModel=await findSearchModel(key, modelToUse);
+  }
+  if(useSearch) modelToUse=window._searchModel||modelToUse;
   const body={
     contents:[{parts:[{text:prompt}]}],
     generationConfig:{temperature:0.1,maxOutputTokens:4096}
@@ -460,7 +484,7 @@ async function callGeminiRaw(prompt,useSearch){
     body.generationConfig.responseMimeType='application/json';
   }
   // Use cached working model or try list
-  const modelsToTry=_workingModel?[_workingModel]:GEMINI_MODELS;
+  const modelsToTry=modelToUse?[modelToUse]:(useSearch?['gemini-2.0-flash-001','gemini-2.0-flash','gemini-1.5-flash-002','gemini-1.5-flash-001']:GEMINI_MODELS);
   let lastError='';
   for(const model of modelsToTry){
     try{
