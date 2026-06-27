@@ -297,7 +297,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 }
 </style>
 </head>
-<body><nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><div class="api-pill" id="apiPill" onclick="openModal()">Gemini Key</div></div></nav><div class="overlay" id="modal" style="display:none" onclick="if(event.target===this)closeModal()"><div class="modal"><h3>Google Gemini API Key</h3><p>Obtém a tua key gratuita em <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a></p><p style="color:var(--dim)">A key é guardada apenas no teu browser (localStorage).</p><input type="password" id="apiInput" placeholder="AIza..."/><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveKey()">Guardar</button></div></div></div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
+<body><nav class="nav"><div class="nav-brand"><div class="nav-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="9" width="3" height="8" rx="1" fill="white" opacity="0.85"/><rect x="7.5" y="5" width="3" height="12" rx="1" fill="white"/><rect x="14" y="1" width="3" height="16" rx="1" fill="white" opacity="0.7"/></svg></div><div><div class="nav-name">Buffett Analyzer Pro</div><div class="nav-sub">Powered by Google Gemini</div></div></div><div class="nav-tabs"><div class="nav-tab active" onclick="goTab('dashboard')" id="tab-dashboard">Dashboard</div><div class="nav-tab" onclick="goTab('scanner')" id="tab-scanner">Scanner</div><div class="nav-tab" onclick="goTab('portfolio')" id="tab-portfolio">Carteira</div></div><div class="nav-right"><button onclick="exportSettings()" style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2)">Exportar</button><label style="font-size:11px;padding:5px 12px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);margin:0">Importar<input type="file" accept=".json" onchange="importSettings(event)" style="display:none"/></label><div class="api-pill" id="apiPill" onclick="openModal()">Gemini Key</div></div></nav><div class="overlay" id="modal" style="display:none" onclick="if(event.target===this)closeModal()"><div class="modal"><h3>Google Gemini API Key</h3><p>Obtém a tua key gratuita em <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a></p><p style="color:var(--dim)">A key é guardada apenas no teu browser (localStorage).</p><input type="password" id="apiInput" placeholder="AIza..."/><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveKey()">Guardar</button></div></div></div><!-- DASHBOARD --><div class="page active" id="page-dashboard"><div class="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;"><div><div class="dash-title">Visão Geral do Mercado</div><div class="dash-sub">Índices, oportunidades e análise Buffett em tempo real</div><div class="dash-date" id="dashDate"></div></div><button onclick="loadDashboard()" id="dashRefreshBtn" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;">
  Atualizar Dados
  </button></div></div><!-- QUICK STATS --><div class="qs-row" id="qsRow"><div class="qs-card"><div class="qs-label">Últimas Análises</div><div class="qs-val" id="qs-total">—</div><div class="qs-sub">ações analisadas no scan</div></div><div class="qs-card"><div class="qs-label">Oportunidades Comprar</div><div class="qs-val c-green" id="qs-buy">—</div><div class="qs-sub">rating COMPRAR no top 20</div></div><div class="qs-card"><div class="qs-label">Melhor Score</div><div class="qs-val c-blue" id="qs-score">—</div><div class="qs-sub" id="qs-score-ticker">score Buffett mais alto</div></div><div class="qs-card"><div class="qs-label">Maior Margem Seg.</div><div class="qs-val c-amber" id="qs-mos">—</div><div class="qs-sub" id="qs-mos-ticker">desconto ao valor intrínseco</div></div></div><!-- INDICES --><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><div style="font-size:15px;font-weight:800;">Índices de Mercado</div><div style="font-size:11px;color:var(--muted)" id="idxLastUpd"></div></div><div class="indices-grid" id="indicesGrid"><div class="idx-card idx-sp"><div class="idx-loading"><div class="spin"></div>A carregar S&P 500...</div></div><div class="idx-card idx-nq"><div class="idx-loading"><div class="spin"></div>A carregar Nasdaq...</div></div><div class="idx-card idx-dj"><div class="idx-loading"><div class="spin"></div>A carregar Dow Jones...</div></div></div><!-- CHARTS --><div class="dash-charts" id="dashCharts" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 15</div><div class="chart-sub">Pontuação composta 0-100 das melhores oportunidades</div><div class="chart-wrap"><canvas id="dashScoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 15</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="dashMosChart"></canvas></div></div></div><!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 20 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Ainda sem scan — vai ao separador Scanner para analisar</div></div><button onclick="goTab('scanner')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">Novo Scanner</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Vai ao separador Scanner e clica em "Iniciar Scanner"</div><button class="tbl-scan-btn" onclick="goTab('scanner')">Ir para o Scanner</button></td></tr></tbody></table></div></div></div><!-- SCANNER --><div class="page" id="page-scanner"><div class="scanner-hero"><div class="sh-top"><div><div class="sh-eyebrow">Warren Buffett Method · Google Gemini + Google Search</div><div class="sh-title">Scanner Automático de Mercado</div><div class="sh-sub">Fase 1: IA filtra 40 candidatos de 800+ ações. Fase 2: análise profunda com dados reais. Resultado: Top 20 oportunidades.</div><div class="sh-stats"><div class="sh-stat"><div class="sh-stat-n">800+</div><div class="sh-stat-l">Ações monitorizadas</div></div><div class="sh-stat"><div class="sh-stat-n">2</div><div class="sh-stat-l">Fases de análise</div></div><div class="sh-stat"><div class="sh-stat-n">Top 20</div><div class="sh-stat-l">Melhores oportunidades</div></div></div></div><button class="scan-btn" id="scanBtn" onclick="startScan()">
  Iniciar Scanner
@@ -887,6 +887,62 @@ async function fetchStock(ticker){
 async function refreshAll(){
   if(!getKey()){openModal();return;}
   for(let i=0;i<portfolio.length;i++) await fetchStock(portfolio[i].ticker);
+}
+
+// ── EXPORT / IMPORT ──
+function exportSettings(){
+  const data={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    apiKey:getKey(),
+    portfolio:portfolio,
+    lastScan:lastScan
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='buffett-analyzer-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importSettings(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.version) throw new Error('Ficheiro invalido');
+      // Import API key
+      if(data.apiKey){
+        LS.s(K.key,data.apiKey);
+        updatePill();
+      }
+      // Import portfolio
+      if(data.portfolio&&data.portfolio.length){
+        portfolio=data.portfolio;
+        LS.s(K.port,portfolio);
+      }
+      // Import last scan
+      if(data.lastScan){
+        LS.s(K.scan,data.lastScan);
+        lastScan=data.lastScan;
+        if(lastScan.results) scanResults=lastScan.results;
+      }
+      alert('Importado com sucesso! API Key, carteira ('+portfolio.length+' acoes) e ultimo scan restaurados.');
+      // Refresh UI
+      renderPortfolio();
+      if(scanResults.length){ renderTopTable(); refreshDashboardCharts(); updateQuickStats(); }
+      initDashboard();
+    }catch(err){
+      alert('Erro ao importar: '+err.message);
+    }
+  };
+  reader.readAsText(file);
+  // Reset input so same file can be imported again
+  event.target.value='';
 }
 
 // ── INIT ──
