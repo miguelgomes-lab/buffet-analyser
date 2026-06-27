@@ -392,32 +392,44 @@ window.AUTH = {
   }
 };
 
-// Handle redirect result on page load
-try{
-  const result = await getRedirectResult(auth);
-  if(result){ console.log('Redirect login OK:', result.user.uid); }
-}catch(e){ console.error('Redirect result error:', e.message); }
+// Handle redirect result FIRST, then listen for auth state
+async function initAuth(){
+  // Show neutral loading state while we figure out auth
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'none';
 
-onAuthStateChanged(auth, function(user){
-  if(user){
-    window._authUser = user;
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appRoot').style.display = 'block';
-    // Update user avatar/name in nav
-    var uname = document.getElementById('navUserName');
-    var uavatar = document.getElementById('navUserAvatar');
-    if(uname) uname.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email || 'Utilizador';
-    if(uavatar){
-      if(user.photoURL){ uavatar.innerHTML='<img src="'+user.photoURL+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover"/>'; }
-      else{ uavatar.textContent = (user.displayName||user.email||'U')[0].toUpperCase(); }
-    }
-    if(window._appReady){ window.initApp(); } else { window._pendingInit = true; }
-  } else {
-    window._authUser = null;
+  try{
+    const result = await getRedirectResult(auth);
+    if(result){ console.log('Redirect login OK:', result.user.uid); }
+  }catch(e){
+    console.error('Redirect result error:', e.message);
+    // Error from redirect - show login screen
     document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('appRoot').style.display = 'none';
+    return;
   }
-});
+
+  onAuthStateChanged(auth, function(user){
+    if(user){
+      window._authUser = user;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appRoot').style.display = 'block';
+      var uname = document.getElementById('navUserName');
+      var uavatar = document.getElementById('navUserAvatar');
+      if(uname) uname.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email || 'Utilizador';
+      if(uavatar){
+        if(user.photoURL){ uavatar.innerHTML='<img src="'+user.photoURL+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover"/>'; }
+        else{ uavatar.textContent = (user.displayName||user.email||'U')[0].toUpperCase(); }
+      }
+      if(window._appReady){ window.initApp(); } else { window._pendingInit = true; }
+    } else {
+      window._authUser = null;
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('appRoot').style.display = 'none';
+    }
+  });
+}
+
+initAuth();
 
 console.log('Firebase Auth initialized');
 </script>
