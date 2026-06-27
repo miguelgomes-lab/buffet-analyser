@@ -305,7 +305,10 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
  Última análise: <strong id="lastRunDate"></strong> &nbsp;·&nbsp;  oportunidades
  <button onclick="startScan()" style="background:var(--blue);color:#fff;border:none;border-radius:7px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px">Reanalisar</button></div><div class="phase-box" id="phaseBox" style="display:none"><div class="phase-title"><div class="spin"></div>&nbsp; Análise em curso...</div><div style="display:flex;flex-direction:column;gap:10px;"><div class="phase-row"><div class="phase-num ph-wait" id="ph1-num">1</div><div class="phase-info"><div class="phase-label">Fase 1 — Pré-filtragem inteligente</div><div class="phase-detail" id="ph1-detail">Gemini seleciona as 40 de 800+ ações</div></div><div class="phase-track"><div class="phase-fill" id="ph1-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="preTickers"></div><div class="phase-row" style="margin-top:4px"><div class="phase-num ph-wait" id="ph2-num">2</div><div class="phase-info"><div class="phase-label">Fase 2 — Análise profunda com Google Search</div><div class="phase-detail" id="ph2-detail">Dados reais: DCF, earnings, guidance</div></div><div class="phase-track"><div class="phase-fill" id="ph2-fill" style="width:0%"></div></div></div><div class="pre-tickers" id="deepTickers"></div></div></div><div class="err-box" id="scanErr" style="display:none"></div><div class="filters-bar" id="filtersBar" style="display:none"><button class="filter-btn active" onclick="setFilter('all',this)">Todos</button><button class="filter-btn" onclick="setFilter('COMPRAR',this)">Comprar</button><button class="filter-btn" onclick="setFilter('AGUARDAR',this)">Aguardar</button><button class="filter-btn" onclick="setFilter('SPX',this)">S&P 500</button><button class="filter-btn" onclick="setFilter('DJI',this)">Dow Jones</button><button class="filter-btn" onclick="setFilter('NDX',this)">Nasdaq</button><button class="filter-btn" onclick="setFilter('DIV',this)">Dividendos</button><select class="sort-select" onchange="setSort(this.value)"><option value="rank">Ordenar: Score Buffett</option><option value="mos">Ordenar: Margem Segurança</option><option value="roe">Ordenar: ROE</option><option value="pe">Ordenar: P/E (menor)</option></select></div><div class="charts-row" id="chartsRow" style="display:none"><div class="chart-card"><div class="chart-title">Score Buffett — Top 20</div><div class="chart-sub">Pontuação composta 0-100</div><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></div><div class="chart-card"><div class="chart-title">Margem de Segurança — Top 20</div><div class="chart-sub">% desconto ao valor intrínseco DCF</div><div class="chart-wrap"><canvas id="mosChart"></canvas></div></div></div><div class="rank-grid" id="rankGrid"></div><div class="empty" id="scanEmpty"><div class="empty-icon"></div><div class="empty-t">Clica em "Iniciar Scanner" para encontrar oportunidades</div><div class="empty-s">S&P 500 · Dow Jones · Nasdaq 100 · Dividend Aristocrats</div></div></div><!-- PORTFOLIO --><div class="page" id="page-portfolio"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;"><div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;">A Minha Carteira</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Valor intrínseco atualizado · próximos earnings · notícias e guidance</div></div><button class="btn btn-primary" onclick="refreshAll()" style="font-size:12px;padding:8px 16px">Atualizar Tudo</button></div><div class="card cp" style="margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Adicionar posição</div><div class="add-row"><div class="inp-group"><span class="inp-label">Ticker</span><input class="inp" id="nTicker" placeholder="AAPL" style="width:120px" onkeydown="if(event.key==='Enter')addStock()"/></div><div class="inp-group"><span class="inp-label">Preço Compra</span><div style="display:flex;gap:4px"><select class="inp" id="nCurrency" style="width:70px;padding:9px 6px;font-size:12px"><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select><input class="inp" id="nPrice" type="number" placeholder="0.00" style="width:100px"/></div></div><div class="inp-group"><span class="inp-label">Nº Ações</span><input class="inp" id="nQty" type="number" placeholder="10" style="width:100px"/></div><button class="add-btn" onclick="addStock()">+ Adicionar</button></div></div><div class="port-grid" id="portGrid"><div class="empty" id="portEmpty"><div class="empty-icon"></div><div class="empty-t">Carteira vazia</div><div class="empty-s">Adiciona o ticker e preço de compra acima</div></div></div></div><script>
 // ── STORAGE ──
-const LS={g:k=>{try{return JSON.parse(localStorage.getItem(k));}catch{return null;}},s:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+const LS={
+  g:function(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){console.warn('LS.get error',k,e);return null;}},
+  s:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){console.warn('LS.set error',k,e);return false;}}
+};
 const K={key:'bfa_gemini_key',port:'bfa_port',scan:'bfa_scan',idx:'bfa_indices'};
 let portfolio=LS.g(K.port)||[];
 let lastScan=LS.g(K.scan)||null;
@@ -317,7 +320,15 @@ let chartScore=null,chartMos=null,dashScoreChart=null,dashMosChart=null;
 const getKey=()=>LS.g(K.key)||'';
 function openModal(){document.getElementById('apiInput').value=getKey();document.getElementById('modal').style.display='flex';}
 function closeModal(){document.getElementById('modal').style.display='none';}
-function saveKey(){const k=document.getElementById('apiInput').value.trim();if(!k)return;LS.s(K.key,k);closeModal();updatePill();}
+function saveKey(){
+  const k=document.getElementById('apiInput').value.trim();
+  if(!k)return;
+  const ok=LS.s(K.key,k);
+  if(!ok){alert('Erro ao guardar a API Key. O teu browser pode ter localStorage desativado.');return;}
+  closeModal();
+  updatePill();
+  console.log('API Key saved, length:',k.length);
+}
 function updatePill(){const el=document.getElementById('apiPill');if(getKey()){el.textContent='Gemini OK';el.className='api-pill api-ok';}else{el.textContent='Gemini Key';el.className='api-pill api-bad';}}
 
 // ── TABS ──
@@ -343,7 +354,7 @@ async function callGeminiRaw(prompt,useSearch){
   } else {
     body.generationConfig.responseMimeType='application/json';
   }
-  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key='+key,{
+  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+(useSearch?'gemini-2.5-flash-latest':'gemini-2.5-pro')+':generateContent?key='+key,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)
@@ -757,16 +768,23 @@ function addStock(){
   const ticker=(document.getElementById('nTicker').value||'').trim().toUpperCase();
   const price=parseFloat(document.getElementById('nPrice').value)||null;
   const qty=parseInt(document.getElementById('nQty').value)||0;
-  const currency=document.getElementById('nCurrency').value||'USD';
-  if(!ticker) return;
+  const currency=(document.getElementById('nCurrency')||{}).value||'USD';
+  if(!ticker){alert('Introduz um ticker.');return;}
   if(portfolio.find(function(s){return s.ticker===ticker;})){alert(ticker+' ja esta na carteira.');return;}
-  portfolio.push({ticker:ticker,buyPrice:price,currency:currency,qty:qty,addedAt:new Date().toISOString(),data:null,lastUpdated:null});
+  const stock={ticker:ticker,buyPrice:price,currency:currency,qty:qty,addedAt:new Date().toISOString(),data:null,lastUpdated:null};
+  portfolio.push(stock);
   LS.s(K.port,portfolio);
+  console.log('Portfolio saved:',portfolio.length,'stocks');
   document.getElementById('nTicker').value='';
   document.getElementById('nPrice').value='';
   document.getElementById('nQty').value='';
-  document.getElementById('nCurrency').value='USD';
-  renderPortfolio();
+  // Add card to DOM directly without full re-render
+  const grid=document.getElementById('portGrid');
+  const empty=document.getElementById('portEmpty');
+  if(empty) empty.style.display='none';
+  const el=document.createElement('div');
+  el.innerHTML=buildPortCard(stock);
+  grid.appendChild(el.firstElementChild);
   if(getKey()) fetchStock(ticker);
 }
 
@@ -781,7 +799,26 @@ function renderPortfolio(){
   const empty=document.getElementById('portEmpty');
   if(!portfolio.length){grid.innerHTML='';grid.appendChild(empty);empty.style.display='block';return;}
   empty.style.display='none';
-  grid.innerHTML=portfolio.map(function(s){return buildPortCard(s);}).join('');
+  // Only rebuild cards that don't exist yet or need update
+  // Remove cards for deleted stocks
+  const existing=grid.querySelectorAll('[id^="pc-"]');
+  existing.forEach(function(el){
+    const t=el.id.replace('pc-','');
+    if(!portfolio.find(function(s){return s.ticker===t;})) el.remove();
+  });
+  // Add/update cards
+  portfolio.forEach(function(s){
+    const existing=document.getElementById('pc-'+s.ticker);
+    const newHtml=buildPortCard(s);
+    if(!existing){
+      const el=document.createElement('div');
+      el.innerHTML=newHtml;
+      grid.appendChild(el.firstElementChild);
+    } else if(s.data && existing.querySelector('.spin')){
+      // Has data but still showing spinner - update it
+      existing.outerHTML=newHtml;
+    }
+  });
 }
 
 function buildPortCard(s){
@@ -832,11 +869,19 @@ async function fetchStock(ticker){
     const data=parseJSON(raw);
     portfolio[idx].data=data;portfolio[idx].lastUpdated=new Date().toISOString();
     LS.s(K.port,portfolio);
+    console.log('Stock data saved for',ticker);
+    // Update card in-place
+    const newCard=buildPortCard(portfolio[idx]);
+    const cardEl=document.getElementById('pc-'+ticker);
+    if(cardEl){
+      const tmp=document.createElement('div');
+      tmp.innerHTML=newCard;
+      cardEl.replaceWith(tmp.firstElementChild);
+    }
   }catch(e){
+    console.error('fetchStock error:',ticker,e.message);
     if(el){const b=el.querySelector('.pcard-body');if(b)b.innerHTML='<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:11px;color:var(--red);font-size:11px;margin:6px">Erro: '+e.message+'</div>';}
-    return;
   }
-  renderPortfolio();
 }
 
 async function refreshAll(){
