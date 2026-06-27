@@ -1301,7 +1301,7 @@ function buildPortCard(s){
       +'<div style="display:flex;gap:2px;">'+(Array.from({length:10},function(_,j){return '<div style="width:8px;height:8px;border-radius:50%;background:'+(j<(d.moat_score||0)?'var(--blue)':'var(--border)')+'"></div>';}).join(''))+'</div>'
       +(d.moat_justification?'<span style="font-size:10px;color:var(--muted);font-style:italic;">— '+d.moat_justification+'</span>':'')
       +'</div>'
-      +(d.dcf?'<div style="margin-top:12px;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;">'        +'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:8px;letter-spacing:.04em;">DCF — VALOR INTRÍNSECO REAL</div>'        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'          +'<div><div style="font-size:9px;color:var(--muted);">FCF crescimento (5a)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.fcfGrowthUsed*100).toFixed(1)+'%/ano</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">WACC</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.wacc*100).toFixed(1)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Crescimento terminal</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.terminalGrowth*100).toFixed(0)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Ajuste dívida líquida</div><div style="font-size:11px;font-weight:700;color:'+(d.dcf.debtAdjusted>0?'var(--red)':'var(--green)')+';">$'+Math.abs(d.dcf.debtAdjusted/1e9).toFixed(1)+'B '+(d.dcf.debtAdjusted>0?'dívida':'caixa')+'</div></div>'        +'</div>'        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'          +'<span style="font-size:10px;color:var(--muted);">Valor intrínseco/ação</span>'          +'<span style="font-size:14px;font-weight:800;color:var(--green);">$'+d.intrinsic_value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'        +'</div>'        +'<div style="font-size:9px;color:var(--muted);margin-top:4px;">Fonte: Yahoo Finance · FCF real · Modelo DCF 10 anos</div>'      +'</div>':'')
+      +(d.dcf?'<div style="margin-top:12px;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;">'        +'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:8px;letter-spacing:.04em;">DCF — VALOR INTRÍNSECO REAL</div>'        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'          +'<div><div style="font-size:9px;color:var(--muted);">Crescimento FCF (fonte: '+( d.dcf.sourceGrowth||'FCF')+')</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.fcfGrowthUsed*100).toFixed(1)+'%/ano (5a) → '+(d.dcf.growth2*100).toFixed(1)+'% (6-10a)</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">WACC (rf 4.5% + β×5.5%)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.wacc*100).toFixed(1)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Crescimento terminal</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.terminalGrowth*100).toFixed(0)+'%</div></div>'          +'<div><div style="font-size:9px;color:var(--muted);">Dívida líquida</div><div style="font-size:11px;font-weight:700;color:'+(d.dcf.debtAdjusted>0?'var(--red)':'var(--green)')+';">$'+Math.abs(d.dcf.debtAdjusted/1e9).toFixed(1)+'B '+(d.dcf.debtAdjusted>0?'dívida':'caixa net')+'</div></div>'          +(d.fundamentals&&d.fundamentals.fcfCagr5!=null?'<div><div style="font-size:9px;color:var(--muted);">FCF CAGR 5 anos (real)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.fundamentals.fcfCagr5*100).toFixed(1)+'%/ano</div></div>':'')          +(d.fundamentals&&d.fundamentals.epsGrowthNext5y!=null?'<div><div style="font-size:9px;color:var(--muted);">EPS crescimento próx. 5a (analistas)</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.fundamentals.epsGrowthNext5y*100).toFixed(1)+'%/ano</div></div>':'')        +'</div>'        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'          +'<span style="font-size:10px;color:var(--muted);">Valor intrínseco/ação</span>'          +'<span style="font-size:14px;font-weight:800;color:var(--green);">$'+d.intrinsic_value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'        +'</div>'        +'<div style="font-size:9px;color:var(--muted);margin-top:4px;">Yahoo Finance · dados reais 5 anos · DCF 10 anos · beta '+(d.fundamentals&&d.fundamentals.beta?d.fundamentals.beta.toFixed(2):'—')+'</div>'      +'</div>':'')
     +'</div></div>';
 }
 
@@ -1339,8 +1339,12 @@ async function fetchYahooPrice(ticker){
 
 async function fetchYahooFundamentals(ticker){
   var yTicker = ticker.replace(/\.US$/,'');
+  // Request both annual (5yr) and TTM data in one call
   var url = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/'+encodeURIComponent(yTicker)
-    +'?modules=financialData,defaultKeyStatistics,incomeStatementHistory,cashflowStatementHistory,balanceSheetHistory,summaryDetail,earnings';
+    +'?modules=financialData,defaultKeyStatistics,incomeStatementHistory,incomeStatementHistoryQuarterly,'
+    +'cashflowStatementHistory,cashflowStatementHistoryQuarterly,'
+    +'balanceSheetHistory,balanceSheetHistoryQuarterly,'
+    +'summaryDetail,earnings,earningsTrend,indexTrend';
   try{
     var data = await yahooFetch(url);
     var q = data&&data.quoteSummary&&data.quoteSummary.result&&data.quoteSummary.result[0];
@@ -1350,48 +1354,113 @@ async function fetchYahooFundamentals(ticker){
     var ks = q.defaultKeyStatistics||{};
     var sd = q.summaryDetail||{};
 
-    // Extract key values
-    var fcf = fd.freeCashflow&&fd.freeCashflow.raw;
-    var revenue = fd.totalRevenue&&fd.totalRevenue.raw;
-    var netIncome = fd.netIncomeToCommon&&fd.netIncomeToCommon.raw;
-    var totalDebt = fd.totalDebt&&fd.totalDebt.raw;
-    var cash = fd.totalCash&&fd.totalCash.raw;
-    var sharesOut = ks.sharesOutstanding&&ks.sharesOutstanding.raw;
-    var beta = ks.beta&&ks.beta.raw;
-    var pe = fd.currentPrice&&fd.trailingEps&&fd.trailingEps.raw ? (fd.currentPrice.raw / fd.trailingEps.raw) : null;
-    var eps = fd.trailingEps&&fd.trailingEps.raw || ks.trailingEps&&ks.trailingEps.raw;
-    var roe = fd.returnOnEquity&&fd.returnOnEquity.raw;
-    var netMargin = fd.profitMargins&&fd.profitMargins.raw;
-    var revenueGrowth = fd.revenueGrowth&&fd.revenueGrowth.raw;
-    var earningsGrowth = fd.earningsGrowth&&fd.earningsGrowth.raw;
-    var dividendYield = sd.dividendYield&&sd.dividendYield.raw;
-    var currentPrice = fd.currentPrice&&fd.currentPrice.raw;
+    // ── Current values ──
+    var fcf          = fd.freeCashflow&&fd.freeCashflow.raw;
+    var revenue      = fd.totalRevenue&&fd.totalRevenue.raw;
+    var netIncome    = fd.netIncomeToCommon&&fd.netIncomeToCommon.raw;
+    var totalDebt    = fd.totalDebt&&fd.totalDebt.raw;
+    var cash         = fd.totalCash&&fd.totalCash.raw;
+    var sharesOut    = ks.sharesOutstanding&&ks.sharesOutstanding.raw;
+    var beta         = ks.beta&&ks.beta.raw;
+    var eps          = fd.trailingEps&&fd.trailingEps.raw || ks.trailingEps&&ks.trailingEps.raw;
+    var roe          = fd.returnOnEquity&&fd.returnOnEquity.raw;
+    var roa          = fd.returnOnAssets&&fd.returnOnAssets.raw;
+    var netMargin    = fd.profitMargins&&fd.profitMargins.raw;
+    var grossMargin  = fd.grossMargins&&fd.grossMargins.raw;
+    var opMargin     = fd.operatingMargins&&fd.operatingMargins.raw;
+    var revenueGrowth   = fd.revenueGrowth&&fd.revenueGrowth.raw;
+    var earningsGrowth  = fd.earningsGrowth&&fd.earningsGrowth.raw;
+    var dividendYield   = sd.dividendYield&&sd.dividendYield.raw;
+    var currentRatio    = fd.currentRatio&&fd.currentRatio.raw;
+    var debtToEquity    = fd.debtToEquity&&fd.debtToEquity.raw;
+    var currentPrice    = fd.currentPrice&&fd.currentPrice.raw;
+    var pe = currentPrice&&eps ? currentPrice/eps : (sd.trailingPE&&sd.trailingPE.raw);
+    var peg = ks.pegRatio&&ks.pegRatio.raw;
+    var priceToBook = ks.priceToBook&&ks.priceToBook.raw;
 
-    // Get historical FCF for growth calc
-    var cfHistory = q.cashflowStatementHistory&&q.cashflowStatementHistory.cashflowStatements||[];
-    var fcfHistory = cfHistory.map(function(s){
-      var op = s.totalCashFromOperatingActivities&&s.totalCashFromOperatingActivities.raw||0;
+    // ── 5-year annual history: Income Statement ──
+    var incomeStmts = q.incomeStatementHistory&&q.incomeStatementHistory.incomeStatementHistory||[];
+    var revenueHistory = incomeStmts.map(function(s){
+      return {year: s.endDate&&s.endDate.fmt&&s.endDate.fmt.slice(0,4),
+              value: s.totalRevenue&&s.totalRevenue.raw};
+    }).filter(function(x){return x.value;});
+    var netIncomeHistory = incomeStmts.map(function(s){
+      return {year: s.endDate&&s.endDate.fmt&&s.endDate.fmt.slice(0,4),
+              value: s.netIncome&&s.netIncome.raw};
+    }).filter(function(x){return x.value;});
+    var grossProfitHistory = incomeStmts.map(function(s){
+      var rev = s.totalRevenue&&s.totalRevenue.raw;
+      var gp  = s.grossProfit&&s.grossProfit.raw;
+      return {year: s.endDate&&s.endDate.fmt&&s.endDate.fmt.slice(0,4),
+              value: rev&&gp ? gp/rev : null};
+    }).filter(function(x){return x.value;});
+
+    // ── 5-year annual history: Cash Flow ──
+    var cfStmts = q.cashflowStatementHistory&&q.cashflowStatementHistory.cashflowStatements||[];
+    var fcfHistory = cfStmts.map(function(s){
+      var op    = s.totalCashFromOperatingActivities&&s.totalCashFromOperatingActivities.raw||0;
       var capex = s.capitalExpenditures&&s.capitalExpenditures.raw||0;
-      return op + capex; // capex is negative
-    }).filter(function(v){return v>0;});
+      return {year: s.endDate&&s.endDate.fmt&&s.endDate.fmt.slice(0,4),
+              value: op + capex}; // capex negative
+    }).filter(function(x){return x.value>0;});
 
-    // Calculate FCF growth rate from history
-    var fcfGrowth = 0.08; // default 8%
-    if(fcfHistory.length >= 2){
-      var oldest = fcfHistory[fcfHistory.length-1];
-      var newest = fcfHistory[0];
-      if(oldest>0 && newest>0){
-        fcfGrowth = Math.pow(newest/oldest, 1/(fcfHistory.length-1)) - 1;
-        fcfGrowth = Math.max(-0.05, Math.min(0.25, fcfGrowth)); // cap -5% to 25%
-      }
+    // ── 5-year annual history: Balance Sheet (ROE proxy) ──
+    var bsStmts = q.balanceSheetHistory&&q.balanceSheetHistory.balanceSheetStatements||[];
+    var equityHistory = bsStmts.map(function(s){
+      return {year: s.endDate&&s.endDate.fmt&&s.endDate.fmt.slice(0,4),
+              value: s.totalStockholderEquity&&s.totalStockholderEquity.raw};
+    }).filter(function(x){return x.value;});
+
+    // ── Calculate 5yr compound growth rates ──
+    function cagr(arr){
+      if(!arr||arr.length<2) return null;
+      var v0=arr[arr.length-1].value, v1=arr[0].value;
+      if(!v0||!v1||v0<=0) return null;
+      return Math.pow(v1/v0, 1/(arr.length-1)) - 1;
     }
-    if(earningsGrowth) fcfGrowth = (fcfGrowth + earningsGrowth) / 2; // blend
+    var revenueCagr5    = cagr(revenueHistory);
+    var netIncomeCagr5  = cagr(netIncomeHistory);
+    var fcfCagr5        = cagr(fcfHistory);
+
+    // ── Avg ROE over 5 years ──
+    var roeAvg5 = null;
+    if(netIncomeHistory.length && equityHistory.length){
+      var roeYears = netIncomeHistory.map(function(ni){
+        var eq = equityHistory.find(function(e){return e.year===ni.year;});
+        return (eq&&eq.value>0) ? ni.value/eq.value : null;
+      }).filter(function(v){return v!=null;});
+      if(roeYears.length) roeAvg5 = roeYears.reduce(function(a,b){return a+b;},0)/roeYears.length;
+    }
+
+    // ── Avg gross margin over 5 years ──
+    var grossMarginAvg5 = grossProfitHistory.length
+      ? grossProfitHistory.reduce(function(a,b){return a+b.value;},0)/grossProfitHistory.length
+      : null;
+
+    // ── FCF growth for DCF ──
+    var fcfGrowth = 0.07;
+    if(fcfCagr5!=null) fcfGrowth = fcfCagr5;
+    else if(earningsGrowth!=null) fcfGrowth = earningsGrowth;
+    fcfGrowth = Math.max(-0.05, Math.min(0.30, fcfGrowth));
+
+    // ── Earnings trend (analyst estimates) ──
+    var trend = q.earningsTrend&&q.earningsTrend.trend||[];
+    var epsNext5y = trend.find(function(t){return t.period==='+5y';});
+    var epsGrowthNext5y = epsNext5y&&epsNext5y.growth&&epsNext5y.growth.raw;
 
     return {
+      // Current
       fcf, revenue, netIncome, totalDebt, cash, sharesOut,
-      beta: beta||1, pe, eps, roe, netMargin, revenueGrowth,
-      earningsGrowth, dividendYield, currentPrice, fcfGrowth,
-      fcfHistory
+      beta: beta||1, pe, peg, priceToBook, eps, roe, roa,
+      netMargin, grossMargin, opMargin, revenueGrowth, earningsGrowth,
+      dividendYield, currentRatio, debtToEquity, currentPrice,
+      // 5-year history
+      revenueHistory, netIncomeHistory, fcfHistory, equityHistory, grossProfitHistory,
+      // 5-year calculated
+      revenueCagr5, netIncomeCagr5, fcfCagr5, roeAvg5, grossMarginAvg5,
+      epsGrowthNext5y,
+      // DCF input
+      fcfGrowth
     };
   }catch(e){
     console.warn('Yahoo fundamentals failed for '+ticker+':', e.message);
@@ -1402,47 +1471,62 @@ async function fetchYahooFundamentals(ticker){
 function calcDCF(fundamentals, ticker){
   if(!fundamentals||!fundamentals.fcf||!fundamentals.sharesOut) return null;
 
-  var fcf = fundamentals.fcf;
+  var fcf    = fundamentals.fcf;
   var shares = fundamentals.sharesOut;
-  var beta = fundamentals.beta||1;
-  var debt = fundamentals.totalDebt||0;
-  var cash = fundamentals.cash||0;
-  var growth1 = fundamentals.fcfGrowth; // years 1-5
-  var growth2 = growth1 * 0.6;          // years 6-10 (deceleration)
-  var terminalGrowth = 0.03;            // 3% terminal
-  // WACC: risk-free 4.5% + beta * equity risk premium 5.5%
+  var beta   = fundamentals.beta||1;
+  var debt   = fundamentals.totalDebt||0;
+  var cash   = fundamentals.cash||0;
+
+  // Growth rate: blend 5yr FCF CAGR + analyst next 5yr EPS estimate
+  var g5fcf     = fundamentals.fcfCagr5;
+  var g5analyst = fundamentals.epsGrowthNext5y;
+  var g5earn    = fundamentals.earningsGrowth;
+
+  var growth1;
+  if(g5fcf!=null && g5analyst!=null) growth1 = g5fcf*0.5 + g5analyst*0.5;
+  else if(g5fcf!=null)               growth1 = g5fcf;
+  else if(g5analyst!=null)           growth1 = g5analyst;
+  else if(g5earn!=null)              growth1 = g5earn;
+  else                               growth1 = fundamentals.fcfGrowth||0.07;
+  growth1 = Math.max(-0.05, Math.min(0.30, growth1));
+
+  var growth2       = growth1 * 0.55;  // deceleration years 6-10
+  var terminalGrowth = 0.03;
+
+  // WACC: risk-free 4.5% + beta × equity risk premium 5.5%
   var wacc = 0.045 + beta * 0.055;
   wacc = Math.max(0.08, Math.min(0.15, wacc));
 
-  // DCF: 10 years of FCF projections
-  var pv = 0;
-  var fcfT = fcf;
+  // DCF: 10 year FCF projections
+  var pv = 0, fcfT = fcf;
   for(var yr=1; yr<=10; yr++){
-    var g = yr<=5 ? growth1 : growth2;
-    fcfT = fcfT * (1 + g);
-    pv += fcfT / Math.pow(1+wacc, yr);
+    fcfT = fcfT * (1 + (yr<=5 ? growth1 : growth2));
+    pv  += fcfT / Math.pow(1+wacc, yr);
   }
 
-  // Terminal value (Gordon Growth)
-  var terminalFCF = fcfT * (1 + terminalGrowth);
+  // Terminal value (Gordon Growth Model)
+  var terminalFCF   = fcfT * (1 + terminalGrowth);
   var terminalValue = terminalFCF / (wacc - terminalGrowth);
-  var pvTerminal = terminalValue / Math.pow(1+wacc, 10);
+  var pvTerminal    = terminalValue / Math.pow(1+wacc, 10);
 
-  // Enterprise Value → Equity Value
-  var enterpriseValue = pv + pvTerminal;
-  var equityValue = enterpriseValue - debt + cash;
+  // Enterprise → Equity value
+  var enterpriseValue  = pv + pvTerminal;
+  var equityValue      = enterpriseValue - debt + cash;
   var intrinsicPerShare = equityValue / shares;
 
   return {
-    intrinsicValue: Math.max(0, intrinsicPerShare),
-    wacc: wacc,
-    fcfGrowthUsed: growth1,
-    terminalGrowth: terminalGrowth,
-    pvFCF: pv,
-    pvTerminal: pvTerminal,
+    intrinsicValue:  Math.max(0, intrinsicPerShare),
+    wacc:            wacc,
+    fcfGrowthUsed:   growth1,
+    growth2:         growth2,
+    terminalGrowth:  terminalGrowth,
+    pvFCF:           pv,
+    pvTerminal:      pvTerminal,
     enterpriseValue: enterpriseValue,
-    debtAdjusted: debt - cash,
-    dcfMethod: true
+    debtAdjusted:    debt - cash,
+    sourceFCF:       g5fcf!=null ? 'CAGR 5a real' : 'estimativa',
+    sourceGrowth:    g5analyst!=null ? 'analistas+FCF' : (g5fcf!=null ? 'FCF 5a' : 'YoY'),
+    dcfMethod:       true
   };
 }
 
@@ -1463,20 +1547,36 @@ async function fetchStock(ticker){
     var realData = '';
     if(yPrice) realData += 'Current price: $'+yPrice.price.toFixed(2)+' ('+yPrice.currency+'). Daily change: '+(yPrice.changePct>=0?'+':'')+yPrice.changePct.toFixed(2)+'%. ';
     if(yFund){
-      if(yFund.roe!=null) realData += 'ROE: '+(yFund.roe*100).toFixed(1)+'%. ';
-      if(yFund.netMargin!=null) realData += 'Net margin: '+(yFund.netMargin*100).toFixed(1)+'%. ';
+      // Current metrics
+      if(yFund.roe!=null) realData += 'ROE TTM: '+(yFund.roe*100).toFixed(1)+'%. ';
+      if(yFund.roeAvg5!=null) realData += 'ROE avg 5yr: '+(yFund.roeAvg5*100).toFixed(1)+'%. ';
+      if(yFund.netMargin!=null) realData += 'Net margin TTM: '+(yFund.netMargin*100).toFixed(1)+'%. ';
+      if(yFund.grossMargin!=null) realData += 'Gross margin TTM: '+(yFund.grossMargin*100).toFixed(1)+'%. ';
+      if(yFund.grossMarginAvg5!=null) realData += 'Gross margin avg 5yr: '+(yFund.grossMarginAvg5*100).toFixed(1)+'%. ';
+      if(yFund.opMargin!=null) realData += 'Operating margin: '+(yFund.opMargin*100).toFixed(1)+'%. ';
       if(yFund.pe!=null) realData += 'P/E trailing: '+yFund.pe.toFixed(1)+'. ';
+      if(yFund.peg!=null) realData += 'PEG: '+yFund.peg.toFixed(2)+'. ';
+      if(yFund.priceToBook!=null) realData += 'P/B: '+yFund.priceToBook.toFixed(2)+'. ';
+      // Income
       if(yFund.revenue!=null) realData += 'Revenue TTM: $'+(yFund.revenue/1e9).toFixed(2)+'B. ';
       if(yFund.netIncome!=null) realData += 'Net income TTM: $'+(yFund.netIncome/1e9).toFixed(2)+'B. ';
       if(yFund.fcf!=null) realData += 'FCF TTM: $'+(yFund.fcf/1e9).toFixed(2)+'B. ';
+      // 5yr CAGR
+      if(yFund.revenueCagr5!=null) realData += 'Revenue CAGR 5yr: '+(yFund.revenueCagr5*100).toFixed(1)+'%. ';
+      if(yFund.netIncomeCagr5!=null) realData += 'Net income CAGR 5yr: '+(yFund.netIncomeCagr5*100).toFixed(1)+'%. ';
+      if(yFund.fcfCagr5!=null) realData += 'FCF CAGR 5yr: '+(yFund.fcfCagr5*100).toFixed(1)+'%. ';
+      if(yFund.epsGrowthNext5y!=null) realData += 'EPS growth next 5yr (analyst est.): '+(yFund.epsGrowthNext5y*100).toFixed(1)+'%. ';
+      // Balance sheet
       if(yFund.totalDebt!=null) realData += 'Total debt: $'+(yFund.totalDebt/1e9).toFixed(2)+'B. ';
       if(yFund.cash!=null) realData += 'Cash: $'+(yFund.cash/1e9).toFixed(2)+'B. ';
-      if(yFund.earningsGrowth!=null) realData += 'Earnings growth YoY: '+(yFund.earningsGrowth*100).toFixed(1)+'%. ';
-      if(yFund.revenueGrowth!=null) realData += 'Revenue growth YoY: '+(yFund.revenueGrowth*100).toFixed(1)+'%. ';
+      if(yFund.currentRatio!=null) realData += 'Current ratio: '+yFund.currentRatio.toFixed(2)+'. ';
+      if(yFund.debtToEquity!=null) realData += 'Debt/equity: '+yFund.debtToEquity.toFixed(1)+'%. ';
+      // Other
       if(yFund.dividendYield!=null) realData += 'Dividend yield: '+(yFund.dividendYield*100).toFixed(2)+'%. ';
       if(yFund.beta!=null) realData += 'Beta: '+yFund.beta.toFixed(2)+'. ';
       if(yFund.eps!=null) realData += 'EPS trailing: $'+yFund.eps.toFixed(2)+'. ';
-      if(dcf) realData += 'DCF intrinsic value (10yr model, WACC '+(dcf.wacc*100).toFixed(1)+'%, FCF growth '+(dcf.fcfGrowthUsed*100).toFixed(1)+'%): $'+dcf.intrinsicValue.toFixed(2)+'/share. ';
+      if(yFund.roa!=null) realData += 'ROA: '+(yFund.roa*100).toFixed(1)+'%. ';
+      if(dcf) realData += 'DCF intrinsic value (10yr, WACC '+(dcf.wacc*100).toFixed(1)+'%, FCF growth '+(dcf.fcfGrowthUsed*100).toFixed(1)+'%/yr, source: '+dcf.sourceGrowth+'): $'+dcf.intrinsicValue.toFixed(2)+'/share. ';
     }
 
     var prompt = 'You are a Warren Buffett analyst. Here are the REAL financial data for '+ticker+' from Yahoo Finance: '+realData
