@@ -496,7 +496,7 @@ async function loadIndices(){
   if(cached&&age<60){renderIndices(cached.data);const lu=document.getElementById('idxLastUpd');if(lu)lu.textContent='Atualizado: '+new Date(cached.date).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});return;}
   const grid=document.getElementById('indicesGrid');
   if(grid) grid.innerHTML='<div class="idx-card idx-sp" style="grid-column:1/-1"><div class="idx-loading"><div class="spin"></div> A carregar indices...</div></div>';
-  const prompt='Search Google for current market data today '+new Date().toISOString().slice(0,10)+'. Find: S&P 500 current value and weekly/monthly/yearly/YTD % change; Nasdaq Composite current value and weekly/monthly/yearly/YTD % change; Dow Jones Industrial Average current value and weekly/monthly/yearly/YTD % change; VIX current value; WTI crude oil price in USD; Gold price per troy oz in USD; Bitcoin price in USD. Return ONLY this JSON with no extra text: {"sp500":{"value":0,"weekly":0,"monthly":0,"yearly":0,"ytd":0},"nasdaq":{"value":0,"weekly":0,"monthly":0,"yearly":0,"ytd":0},"dowjones":{"value":0,"weekly":0,"monthly":0,"yearly":0,"ytd":0},"vix":0,"oil":0,"gold":0,"btc":0}';
+  const prompt='Search Google for live market data right now. Get the CURRENT values: (1) S&P 500 index level and its % change vs 1 week ago, 1 month ago, 1 year ago, and Jan 1 this year. (2) Nasdaq Composite same. (3) Dow Jones Industrial Average same. (4) VIX volatility index current value. (5) WTI crude oil price USD/barrel. (6) Gold spot price USD/troy oz. (7) Bitcoin USD price. Return ONLY this exact JSON structure with real numbers, no markdown, no text: {"sp500":{"value":5800,"weekly":1.2,"monthly":-0.5,"yearly":18.3,"ytd":12.1},"nasdaq":{"value":18500,"weekly":0.8,"monthly":-1.2,"yearly":22.1,"ytd":15.3},"dowjones":{"value":43000,"weekly":0.5,"monthly":0.2,"yearly":14.2,"ytd":8.1},"vix":18.5,"oil":72.3,"gold":2350,"btc":65000}';
   try{
     const raw=await callGeminiRaw(prompt,true);
     const data=parseJSON(raw);
@@ -609,41 +609,34 @@ async function phase1(tickers){
 
 async function phase2(tickers){
   const res=[];
-  const BATCH=5;
-  const batches=[];
-  for(let i=0;i<tickers.length;i+=BATCH) batches.push(tickers.slice(i,i+BATCH));
-  // Run up to 3 batches in parallel
-  const PARALLEL=3;
-  let done=0;
-  for(let i=0;i<batches.length;i+=PARALLEL){
-    const group=batches.slice(i,i+PARALLEL);
-    group.forEach(function(batch){batch.forEach(function(t){updateDeepChip(t,'active');});});
-    const pd2=document.getElementById('ph2-detail');
-    if(pd2) pd2.textContent='A analisar lotes '+(i+1)+'-'+(Math.min(i+PARALLEL,batches.length))+' de '+batches.length+'...';
-    const groupResults=await Promise.all(group.map(function(batch){
-      return analyzeBatch(batch).catch(function(e){console.warn('Batch error:',e.message);return [];});
-    }));
-    groupResults.forEach(function(batchRes,bi){
-      const batch=group[bi];
-      (batchRes||[]).forEach(function(r){
-        if(r&&r.ticker){
-          r.universes=TICKER_U[r.ticker]||[];
-          res.push(r);
-          updateDeepChip(r.ticker,'done');
-          appendCard(r,res.length);
-        }
-      });
-      batch.forEach(function(t){updateDeepChip(t,'done');});
+  const pd2=document.getElementById('ph2-detail');
+  const pf2=document.getElementById('ph2-fill');
+  tickers.forEach(function(t){updateDeepChip(t,'active');});
+  if(pd2) pd2.textContent='A analisar '+tickers.length+' acoes com Gemini 2.5 Pro...';
+  animFill('ph2-fill',0,90,25000);
+  try{
+    const batchRes=await analyzeAll(tickers);
+    batchRes.forEach(function(r){
+      if(r&&r.ticker){
+        r.universes=TICKER_U[r.ticker]||[];
+        res.push(r);
+        updateDeepChip(r.ticker,'done');
+        appendCard(r,res.length);
+      }
     });
-    done+=group.length;
-    const pf2=document.getElementById('ph2-fill');
-    if(pf2) pf2.style.width=Math.round((done/batches.length)*100)+'%';
+  }catch(e){
+    console.warn('Analysis error:',e.message);
+    if(pd2) pd2.textContent='Erro: '+e.message;
   }
+  tickers.forEach(function(t){updateDeepChip(t,'done');});
+  if(pf2) pf2.style.width='100%';
   return res;
 }
 
-async function analyzeBatch(tickers){
-  const prompt='Use Google Search to find current financial data for these stocks: '+tickers.join(', ')+'. For each stock find: company name, sector, 10yr avg ROE%, net margin%, 10yr EPS growth%/yr, debt years (total debt/net income), moat score 0-10, intrinsic value via DCF (project owner earnings 10 years at estimated growth, discount at 10%, add terminal value at g=3%), current price USD, margin of safety as (intrinsic-price)/intrinsic*100, P/E ratio, dividend yield%, calculate buffett_score 0-100 (ROE 20%+margin 15%+EPS 15%+moat 20%+margin_of_safety 20%+debt 10%), rating: COMPRAR if margin_of_safety>25 and buffett_score>65 and debt_years<5; EVITAR if buffett_score<35 or debt_years>8; otherwise AGUARDAR. Also calculate buy_price as intrinsic*0.70, write 2-sentence thesis in European Portuguese, get this week price change %. Return ONLY JSON: {"results":[{"ticker":"","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0}]}';
+async function analyzeAll(tickers){
+  // Single call - Gemini 2.5 Pro knows financial data from training
+  // Use search only for current prices and recent data
+  const prompt='You are a financial analyst expert in Warren Buffett investing methodology. Analyze these '+tickers.length+' stocks: '+tickers.join(', ')+'. Use your training knowledge for fundamental data (ROE history, margins, moat, EPS growth) and Google Search for current stock prices and this week changes. For each stock calculate: ticker (exact symbol), company_name, sector, roe (10yr avg ROE %), net_margin (current net margin %), eps_growth (10yr EPS growth %/yr), debt_years (total debt / annual net income), moat_score (0-10 competitive advantage), intrinsic_value (DCF: estimate normalized owner earnings, project 10 years at sustainable growth rate, discount at 10%, add terminal value g=3%), current_price (USD, search for latest), margin_of_safety ((intrinsic_value-current_price)/intrinsic_value*100), pe_ratio (current), dividend_yield (%), buffett_score (0-100: ROE 20%+net_margin 15%+eps_growth 15%+moat_score 20%+margin_of_safety 20%+debt 10%), rating (COMPRAR if margin_of_safety>25 AND buffett_score>65 AND debt_years<5; EVITAR if buffett_score<35 OR debt_years>8; else AGUARDAR), buy_price (intrinsic_value*0.70), thesis (2 sentences in European Portuguese explaining investment case), week_change (% price change this week, use search). Return ONLY valid JSON, no markdown: {"results":[{"ticker":"AAPL","company_name":"Apple Inc","sector":"Technology","roe":150.0,"net_margin":25.3,"eps_growth":12.1,"debt_years":1.2,"moat_score":9,"intrinsic_value":185.0,"current_price":211.0,"margin_of_safety":-14.0,"pe_ratio":32.1,"dividend_yield":0.5,"buffett_score":72,"rating":"AGUARDAR","buy_price":129.5,"thesis":"A Apple possui um ecossistema inigualavel...","week_change":1.2},...]}';
   const raw=await callGeminiRaw(prompt,true);
   const parsed=parseJSON(raw);
   return parsed.results||[];
@@ -833,7 +826,7 @@ async function fetchStock(ticker){
   if(idx===-1) return;
   const el=document.getElementById('pc-'+ticker);
   if(el){const b=el.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A atualizar com Gemini...</div></div>';}
-  const prompt='Use Google Search to find current data for stock '+ticker+'. Search stockanalysis.com, finance.yahoo.com, macrotrends.net, finviz.com. Get: company_name, sector, current_price USD, intrinsic_value via DCF (10yr projected owner earnings discounted at 10% + terminal value g=3%), margin_of_safety as (intrinsic-price)/intrinsic*100, pe_ratio, ROE 10yr avg%, net_margin%, eps_growth 10yr%/yr, debt_years (debt/net income), moat_score 0-10, buffett_score 0-100, rating COMPRAR/AGUARDAR/EVITAR, buy_price as intrinsic*0.70, dividend_yield%, next earnings date, earnings_countdown (e.g. "em 45 dias"), guidance summary in 2 sentences in European Portuguese from last quarterly report, 3 recent news items as array [{title,source,date}], thesis 2 sentences in European Portuguese, data_quality high/medium/low. Return ONLY JSON: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":"","data_quality":""}';
+  const prompt='You are a Warren Buffett investment analyst. Analyze stock '+ticker+'. Use your training knowledge for fundamental data and Google Search for: current price, latest news (last 7 days), next earnings date, and recent guidance. Provide: company_name, sector, current_price (USD - search this), intrinsic_value (DCF: normalized owner earnings projected 10yrs at sustainable growth, discounted 10%, terminal g=3%), margin_of_safety ((intrinsic-current_price)/intrinsic*100), pe_ratio, roe (10yr avg %), net_margin (%), eps_growth (10yr %/yr), debt_years (total debt/net income), moat_score (0-10), buffett_score (0-100: ROE 20%+margin 15%+EPS 15%+moat 20%+MoS 20%+debt 10%), rating (COMPRAR if MoS>25 AND score>65 AND debt<5; EVITAR if score<35 OR debt>8; else AGUARDAR), buy_price (intrinsic*0.70), dividend_yield (%), next_earnings (search - date of next earnings report), earnings_countdown (e.g. "em 45 dias"), guidance (2 sentences in European Portuguese summarizing latest quarterly guidance - search for this), news (search for 3 latest news items: [{title,source,date}]), thesis (2 sentences in European Portuguese on investment case), data_quality (alta/media/baixa). Return ONLY valid JSON no markdown: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":"","data_quality":"alta"}';
   try{
     const raw=await callGeminiRaw(prompt,true);
     const data=parseJSON(raw);
