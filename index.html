@@ -803,8 +803,8 @@ async function phase2(tickers){
 }
 
 async function analyzeOne(ticker){
-  var prompt='Analyze stock '+ticker+' using Warren Buffett method. Use Google Search for current price. Return ONLY valid JSON: {"ticker":"'+ticker+'","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0} where: roe=10yr avg ROE%, net_margin=net margin%, eps_growth=10yr EPS growth%/yr, debt_years=debt/net income, moat_score=0-10, intrinsic_value=DCF USD, current_price=latest USD from search, margin_of_safety=(intrinsic-price)/intrinsic*100, buffett_score=0-100, rating=COMPRAR if MoS>25 AND score>65 AND debt<5 else EVITAR if score<35 OR debt>8 else AGUARDAR, buy_price=intrinsic*0.70, thesis=2 sentences European Portuguese, week_change=% this week.';
-  var raw=await callGeminiRaw(prompt,true);
+  var prompt='Analyze stock '+ticker+' as Warren Buffett would. Use training knowledge. Return ONLY JSON: {"ticker":"'+ticker+'","company_name":"","sector":"","roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"intrinsic_value":0,"current_price":0,"margin_of_safety":0,"pe_ratio":0,"dividend_yield":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"thesis":"","week_change":0}';
+  var raw=await callGeminiRaw(prompt,false);
   return parseJSON(raw);
 }
 
@@ -998,22 +998,22 @@ function buildPortCard(s){
 async function fetchStock(ticker){
   var idx=portfolio.findIndex(function(s){return s.ticker===ticker;});
   if(idx===-1)return;
-  var el=document.getElementById('pc-'+ticker);
-  if(el){var b=el.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A atualizar...</div></div>';}
-  var s=portfolio[idx];
-  var prompt='Analyze '+ticker+' with Buffett method. Search Google for current price, recent news, next earnings. Use training knowledge for fundamentals (ROE, margins, EPS growth, moat). Return ONLY JSON no markdown: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":"","data_quality":"media"}';
+  var cardEl=document.getElementById('pc-'+ticker);
+  if(cardEl){var b=cardEl.querySelector('.pcard-body');if(b)b.innerHTML='<div style="text-align:center;padding:28px;color:var(--muted)"><div class="spin" style="margin:0 auto 7px"></div><div style="font-size:11px">A analisar '+ticker+'...</div></div>';}
+  // No Google Search - use model knowledge only (much faster, no timeouts)
+  var prompt='You are a financial analyst. Analyze stock '+ticker+' using Warren Buffett method. Use your training data for all fundamentals. For current price use your most recent knowledge. Return ONLY valid JSON: {"company_name":"","sector":"","current_price":0,"intrinsic_value":0,"margin_of_safety":0,"pe_ratio":0,"roe":0,"net_margin":0,"eps_growth":0,"debt_years":0,"moat_score":0,"buffett_score":0,"rating":"AGUARDAR","buy_price":0,"dividend_yield":0,"next_earnings":"Q3 2025","earnings_countdown":"","guidance":"","news":[{"title":"","source":"","date":""}],"thesis":"","data_quality":"media"} Rules: margin_of_safety=(intrinsic-current_price)/intrinsic*100; rating=COMPRAR if MoS>25 AND buffett_score>65 AND debt_years<5, EVITAR if buffett_score<35 OR debt_years>8, else AGUARDAR; buy_price=intrinsic*0.70; thesis=2 sentences European Portuguese; buffett_score=ROE(20%)+net_margin(15%)+eps_growth(15%)+moat_score(20%)+margin_of_safety(20%)+debt(10%).';
   try{
-    var raw=await callGeminiRaw(prompt,true);
+    var raw=await callGeminiRaw(prompt,false);
     var data=parseJSON(raw);
     portfolio[idx].data=data;
     portfolio[idx].lastUpdated=new Date().toISOString();
     LS.s(K.port,portfolio);
     var html=buildPortCard(portfolio[idx]);
-    var cardEl=document.getElementById('pc-'+ticker);
-    if(cardEl){var tmp=document.createElement('div');tmp.innerHTML=html;if(tmp.firstElementChild)cardEl.replaceWith(tmp.firstElementChild);}
+    var el2=document.getElementById('pc-'+ticker);
+    if(el2){var tmp=document.createElement('div');tmp.innerHTML=html;if(tmp.firstElementChild)el2.replaceWith(tmp.firstElementChild);}
   }catch(e){
-    var cardEl2=document.getElementById('pc-'+ticker);
-    if(cardEl2){var b2=cardEl2.querySelector('.pcard-body');if(b2)b2.innerHTML='<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:11px;color:var(--red);font-size:11px;margin:6px">Erro: '+e.message+'</div>';}
+    var el3=document.getElementById('pc-'+ticker);
+    if(el3){var b3=el3.querySelector('.pcard-body');if(b3)b3.innerHTML='<div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:8px;padding:11px;color:var(--red);font-size:11px;margin:6px">Erro: '+e.message+'</div>';}
   }
 }
 
