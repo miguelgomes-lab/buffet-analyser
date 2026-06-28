@@ -513,6 +513,30 @@ console.log('Firebase Auth initialized');
 </script>
 
 <script>
+// ── GLOBAL ERROR CATCHER ──
+window.onerror = function(msg, src, line, col, err){
+  var banner = document.getElementById('js-error-banner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'js-error-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:10px 14px;font-size:12px;font-weight:700;z-index:9999;font-family:monospace;white-space:pre-wrap;word-break:break-all;';
+    document.body.appendChild(banner);
+  }
+  banner.textContent = '❌ JS ERROR: ' + msg + '\nLine: ' + line + ' Col: ' + col + '\nFile: ' + src;
+  return false;
+};
+window.onunhandledrejection = function(e){
+  var banner = document.getElementById('js-error-banner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'js-error-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:10px 14px;font-size:12px;font-weight:700;z-index:9999;font-family:monospace;white-space:pre-wrap;word-break:break-all;';
+    document.body.appendChild(banner);
+  }
+  banner.textContent = '❌ PROMISE ERROR: ' + (e.reason && e.reason.message || e.reason || 'unknown');
+};
+
+
 // ── STORAGE ──
 const LS={
   g:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}},
