@@ -990,15 +990,15 @@ function renderTopTable(){
       +'<td class="td-ticker">'+(r.ticker||'')+'</td>'
       +'<td class="td-name">'+(r.company_name||'')+'</td>'
       +'<td class="td-sector">'+(r.sector||'')+'</td>'
-      +'<td class="td-num" style="color:'+scC+';font-weight:900;font-size:14px">'+(r.buffett_score||'—')+'</td>'
-      +'<td class="td-num c-blue">$'+(r.current_price?r.current_price.toFixed(2):'—')+'</td>'
-      +'<td class="td-num c-green">$'+(r.intrinsic_value?r.intrinsic_value.toFixed(2):'—')+'</td>'
-      +'<td class="td-num c-amber">$'+(r.buy_price?r.buy_price.toFixed(2):'—')+'</td>'
-      +'<td><div class="mos-mini"><div class="mos-bar"><div class="mos-fill" style="width:'+Math.max(0,Math.min(100,r.margin_of_safety||0))+'%;background:'+mosC+'"></div></div><span style="font-size:11px;font-weight:800;color:'+mosC+'">'+(r.margin_of_safety?r.margin_of_safety.toFixed(1):'—')+'%</span></div></td>'
-      +'<td class="td-num '+mc(r.roe,15,10)+'">'+(r.roe?r.roe.toFixed(1):'—')+'%</td>'
-      +'<td class="td-num '+mc(r.net_margin,15,8)+'">'+(r.net_margin?r.net_margin.toFixed(1):'—')+'%</td>'
-      +'<td class="td-num">'+(r.pe_ratio?r.pe_ratio.toFixed(1):'—')+'x</td>'
-      +'<td class="td-num c-green">'+(r.dividend_yield>0?r.dividend_yield.toFixed(2)+'%':'—')+'</td>'
+      +'<td class="td-num" style="color:'+scC+';font-weight:900;font-size:14px">'+(r.buffett_score!=null&&r.buffett_score!==''?r.buffett_score:'—')+'</td>'
+      +'<td class="td-num c-blue">$'+(r.current_price!=null&&r.current_price>0?r.current_price.toFixed(2):'—')+'</td>'
+      +'<td class="td-num c-green">$'+(r.intrinsic_value!=null&&r.intrinsic_value>0?r.intrinsic_value.toFixed(2):'—')+'</td>'
+      +'<td class="td-num c-amber">$'+(r.buy_price!=null&&r.buy_price>0?r.buy_price.toFixed(2):'—')+'</td>'
+      +'<td><div class="mos-mini"><div class="mos-bar"><div class="mos-fill" style="width:'+Math.max(0,Math.min(100,r.margin_of_safety||0))+'%;background:'+mosC+'"></div></div><span style="font-size:11px;font-weight:800;color:'+mosC+'">'+(r.margin_of_safety!=null&&r.margin_of_safety!==0?r.margin_of_safety.toFixed(1):'—')+'%</span></div></td>'
+      +'<td class="td-num '+mc(r.roe,15,10)+'">'+(r.roe!=null&&r.roe!==0?r.roe.toFixed(1):'—')+'%</td>'
+      +'<td class="td-num '+mc(r.net_margin,15,8)+'">'+(r.net_margin!=null&&r.net_margin!==0?r.net_margin.toFixed(1):'—')+'%</td>'
+      +'<td class="td-num">'+(r.pe_ratio!=null&&r.pe_ratio!==0?r.pe_ratio.toFixed(1):'—')+'x</td>'
+      +'<td class="td-num c-green">'+(r.dividend_yield!=null&&r.dividend_yield>0?r.dividend_yield.toFixed(2)+'%':'—')+'</td>'
       +'<td><div class="moat-mini">'+dots+'</div></td>'
       +'<td><span class="'+rCls+'">'+(r.rating||'')+'</span></td>'
       +'</tr>';
@@ -1262,8 +1262,11 @@ async function analyzeOne(ticker){
     +customRules2
     +' Return ONLY JSON: {"sector":"","moat_score":0,"moat_justification":"","rating":"AGUARDAR","thesis":"","next_earnings":"","guidance":""}';
 
-  var raw = await callGeminiRaw(prompt, false);
-  var aiData = parseJSON(raw);
+  var aiData = {};
+  try{
+    var raw = await callGeminiRaw(prompt, false);
+    aiData = parseJSON(raw) || {};
+  }catch(e){ console.warn('Claude failed for '+ticker+':', e.message); }
 
   // Step 3: Build final result combining real data + AI qualitative analysis
   var currentPrice = (yPrice&&yPrice.price) || 0;
