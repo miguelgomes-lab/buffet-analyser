@@ -367,40 +367,20 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
     </div>
 
     <!-- TAB: MÉTODO DE ANÁLISE -->
-    <div id="stab-content-method" style="padding:22px 24px;display:none;">
-      <div style="font-size:11px;color:#6b84a8;margin-bottom:16px;">Critérios base do método Buffett. Altera os mínimos ou adiciona regras personalizadas que serão incluídas na análise da IA.</div>
+    <div id="stab-content-method" style="padding:16px 20px;display:none;">
+      <div style="font-size:11px;color:#6b84a8;margin-bottom:14px;">Define as métricas, os thresholds e o peso de cada uma no score final (0-100). Ativa/desativa cada métrica individualmente.</div>
 
-      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:12px;">Critérios base</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">ROE mínimo (%)</div>
-          <input id="cfg-roe" type="number" value="15" min="0" max="100" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Margem líquida mín. (%)</div>
-          <input id="cfg-margin" type="number" value="15" min="0" max="100" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">P/E máximo</div>
-          <input id="cfg-pe" type="number" value="25" min="0" max="200" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Dívida máx. (anos FCF)</div>
-          <input id="cfg-debt" type="number" value="3" min="0" max="20" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Moat mínimo (0-10)</div>
-          <input id="cfg-moat" type="number" value="7" min="0" max="10" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#6b84a8;margin-bottom:4px;">Margem segurança mín. (%)</div>
-          <input id="cfg-mos" type="number" value="20" min="0" max="80" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f4;border-radius:7px;font-size:13px;font-family:Inter,sans-serif;outline:none;"/>
-        </div>
+      <!-- Total weight indicator -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;background:#f4f7fc;border-radius:9px;border:1.5px solid #e2e8f4;">
+        <span style="font-size:12px;font-weight:700;color:#344f73;">Peso total alocado</span>
+        <span id="totalWeightDisplay" style="font-size:14px;font-weight:800;color:#1a56db;">100%</span>
       </div>
 
-      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Regras personalizadas</div>
-      <div style="font-size:11px;color:#6b84a8;margin-bottom:8px;">Escreve instruções adicionais para a IA seguir na análise (ex: "prefere empresas com dividendos crescentes há +10 anos", "ignora empresas de tecnologia especulativa").</div>
-      <textarea id="cfg-rules" rows="4" placeholder="Ex: Prioriza empresas com histórico de dividendos crescentes. Penaliza empresas com exposição elevada à China. Favorece setores defensivos em períodos de recessão." style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:12px;font-family:Inter,sans-serif;outline:none;resize:vertical;color:#344f73;line-height:1.5;"></textarea>
+      <div id="metricsConfigList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;"></div>
+
+      <div style="font-size:12px;font-weight:700;color:#344f73;margin-bottom:6px;">Regras para a IA</div>
+      <div style="font-size:11px;color:#6b84a8;margin-bottom:8px;">Instruções adicionais para o Claude seguir na análise qualitativa.</div>
+      <textarea id="cfg-rules" rows="3" placeholder="Ex: Prioriza empresas com dividendos crescentes. Penaliza exposição elevada à China." style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f4;border-radius:8px;font-size:12px;font-family:Inter,sans-serif;outline:none;resize:vertical;color:#344f73;line-height:1.5;box-sizing:border-box;"></textarea>
 
       <div id="settingsMethodStatus" style="font-size:11px;color:#6b84a8;margin:10px 0 0;min-height:16px;"></div>
       <div style="display:flex;gap:8px;margin-top:14px;">
@@ -564,14 +544,141 @@ function updateSyncStatus(status){}
 // ── SETTINGS MODAL ──
 var _settingsCurrentTab = 'api';
 
-// Default method config
-var METHOD_DEFAULTS = { roe:15, margin:15, pe:25, debt:3, moat:7, mos:20, rules:'' };
+// ── METRIC SCORING SYSTEM ──
+// Each metric: id, label, key (maps to fund field), direction (higher/lower = better),
+// unit, weight (%), thresholds [bad, ok, good, great, super], enabled
+var METRICS_CATALOG = [
+  { id:'roe',      label:'ROE',               key:'roe',           dir:'higher', unit:'%',  weight:15, enabled:true,
+    th:{ bad:5, ok:10, good:15, great:20, super:30 } },
+  { id:'roic',     label:'ROIC',              key:'roic',          dir:'higher', unit:'%',  weight:12, enabled:true,
+    th:{ bad:5, ok:10, good:15, great:20, super:25 } },
+  { id:'netMargin',label:'Margem Líquida',    key:'netMargin',     dir:'higher', unit:'%',  weight:10, enabled:true,
+    th:{ bad:3, ok:8, good:15, great:20, super:30 } },
+  { id:'grossMargin',label:'Margem Bruta',    key:'grossMargin',   dir:'higher', unit:'%',  weight:8,  enabled:true,
+    th:{ bad:20, ok:35, good:45, great:55, super:65 } },
+  { id:'opMargin', label:'Margem Operacional',key:'opMargin',      dir:'higher', unit:'%',  weight:8,  enabled:true,
+    th:{ bad:5, ok:12, good:18, great:25, super:35 } },
+  { id:'pe',       label:'P/E',               key:'pe',            dir:'lower',  unit:'x',  weight:8,  enabled:true,
+    th:{ bad:50, ok:35, good:25, great:18, super:12 } },
+  { id:'peg',      label:'PEG',               key:'peg',           dir:'lower',  unit:'x',  weight:6,  enabled:true,
+    th:{ bad:3, ok:2, good:1.5, great:1, super:0.5 } },
+  { id:'pb',       label:'P/Book',            key:'priceToBook',   dir:'lower',  unit:'x',  weight:5,  enabled:false,
+    th:{ bad:10, ok:6, good:4, great:2, super:1 } },
+  { id:'revCagr',  label:'Cresc. Receita 5a', key:'revenueCagr5',  dir:'higher', unit:'%',  weight:8,  enabled:true,
+    th:{ bad:0, ok:3, good:8, great:15, super:20 } },
+  { id:'fcfCagr',  label:'Cresc. FCF 5a',     key:'fcfCagr5',      dir:'higher', unit:'%',  weight:6,  enabled:true,
+    th:{ bad:0, ok:3, good:8, great:15, super:20 } },
+  { id:'epsCagr',  label:'Cresc. EPS 5a',     key:'epsGrowthNext5y',dir:'higher',unit:'%',  weight:6,  enabled:false,
+    th:{ bad:0, ok:3, good:8, great:15, super:20 } },
+  { id:'debtFcf',  label:'Dívida / FCF',      key:'debtFcf',       dir:'lower',  unit:'x',  weight:8,  enabled:true,
+    th:{ bad:8, ok:5, good:3, great:1.5, super:0.5 } },
+  { id:'currentRatio',label:'Current Ratio',  key:'currentRatio',  dir:'higher', unit:'x',  weight:4,  enabled:false,
+    th:{ bad:0.8, ok:1.2, good:1.5, great:2, super:3 } },
+  { id:'divYield', label:'Dividend Yield',    key:'dividendYield', dir:'higher', unit:'%',  weight:4,  enabled:false,
+    th:{ bad:0, ok:1, good:2, great:3.5, super:5 } },
+  { id:'mos',      label:'Margem Segurança DCF',key:'_mos',        dir:'higher', unit:'%',  weight:7,  enabled:true,
+    th:{ bad:0, ok:10, good:20, great:30, super:40 } },
+  { id:'roa',      label:'ROA',               key:'roa',           dir:'higher', unit:'%',  weight:5,  enabled:false,
+    th:{ bad:2, ok:5, good:10, great:15, super:20 } },
+];
+
+var METHOD_DEFAULTS = { metrics: null, rules: '', mos: 20 };
 
 function getMethodConfig(){
   return LS.g('bfa_method') || Object.assign({}, METHOD_DEFAULTS);
 }
 
-function switchSettingsTab(tab){
+function getActiveMetrics(){
+  var cfg = getMethodConfig();
+  if(cfg.metrics) return cfg.metrics;
+  return METRICS_CATALOG.map(function(m){ return Object.assign({}, m); });
+}
+
+function updateTotalWeightDisplay(){
+  var total = 0;
+  document.querySelectorAll('.metric-weight-inp').forEach(function(inp){
+    var row = inp.closest('[data-metric-id]');
+    var cb = row && row.querySelector('.metric-enabled-cb');
+    if(cb && cb.checked) total += parseFloat(inp.value) || 0;
+  });
+  var el = document.getElementById('totalWeightDisplay');
+  if(el){
+    el.textContent = total + '%';
+    el.style.color = Math.abs(total-100)<1 ? '#16a34a' : total>100 ? '#dc2626' : '#d97706';
+  }
+}
+
+function loadMethodTab(){
+  var cfg = getMethodConfig();
+  var metrics = cfg.metrics || METRICS_CATALOG.map(function(m){ return Object.assign({}, m); });
+  document.getElementById('cfg-rules').value = cfg.rules || '';
+
+  var list = document.getElementById('metricsConfigList');
+  list.innerHTML = metrics.map(function(m){
+    var th = m.th || {};
+    var labels = m.dir === 'higher'
+      ? ['Fraco','Médio','Bom','Ótimo','Super']
+      : ['Excessivo','Alto','Médio','Bom','Excelente'];
+    return '<div data-metric-id="'+m.id+'" style="background:#f8faff;border:1.5px solid #e2e8f4;border-radius:10px;padding:12px 14px;">'
+      // Header row
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;">'
+          +'<input type="checkbox" class="metric-enabled-cb" '+(m.enabled?'checked':'')+' onchange="updateTotalWeightDisplay()" style="width:15px;height:15px;accent-color:#1a56db;cursor:pointer;">'
+          +'<span style="font-size:13px;font-weight:700;color:#1a3a6b;">'+m.label+'</span>'
+          +'<span style="font-size:10px;color:#6b84a8;background:#e8eefa;border-radius:4px;padding:1px 6px;">'+(m.dir==='higher'?'↑ maior melhor':'↓ menor melhor')+'</span>'
+        +'</label>'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">'
+          +'<span style="font-size:10px;color:#6b84a8;font-weight:600;">Peso:</span>'
+          +'<input type="number" class="metric-weight-inp" value="'+m.weight+'" min="0" max="100" oninput="updateTotalWeightDisplay()" style="width:52px;padding:4px 6px;border:1.5px solid #e2e8f4;border-radius:6px;font-size:12px;font-weight:700;color:#1a56db;text-align:center;font-family:Inter,sans-serif;outline:none;">'
+          +'<span style="font-size:10px;color:#6b84a8;font-weight:600;">%</span>'
+        +'</div>'
+      +'</div>'
+      // Thresholds
+      +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;">'
+        +['bad','ok','good','great','super'].map(function(level, i){
+          var colors = ['#fee2e2','#fef3c7','#d1fae5','#bfdbfe','#e0e7ff'];
+          var textColors = ['#dc2626','#d97706','#16a34a','#1d4ed8','#7c3aed'];
+          return '<div style="background:'+colors[i]+';border-radius:6px;padding:5px 4px;text-align:center;">'
+            +'<div style="font-size:9px;font-weight:700;color:'+textColors[i]+';margin-bottom:3px;">'+labels[i]+'</div>'
+            +'<input type="number" class="metric-th-inp" data-level="'+level+'" value="'+(th[level]||0)+'" style="width:100%;border:none;background:transparent;font-size:11px;font-weight:700;color:'+textColors[i]+';text-align:center;outline:none;font-family:Inter,sans-serif;">'
+            +'<div style="font-size:9px;color:'+textColors[i]+';">'+m.unit+'</div>'
+          +'</div>';
+        }).join('')
+      +'</div>'
+    +'</div>';
+  }).join('');
+
+  updateTotalWeightDisplay();
+}
+
+function resetMethodDefaults(){
+  var cfg = { metrics: METRICS_CATALOG.map(function(m){ return Object.assign({}, m); }), rules: '', mos: 20 };
+  LS.s('bfa_method', cfg);
+  loadMethodTab();
+  var st = document.getElementById('settingsMethodStatus');
+  if(st){ st.textContent = 'Reposto para valores padrão.'; st.style.color='#6b84a8'; }
+}
+
+async function saveMethodSettings(){
+  var metrics = [];
+  document.querySelectorAll('#metricsConfigList [data-metric-id]').forEach(function(row){
+    var id = row.getAttribute('data-metric-id');
+    var catalog = METRICS_CATALOG.find(function(m){ return m.id===id; });
+    if(!catalog) return;
+    var enabled = row.querySelector('.metric-enabled-cb').checked;
+    var weight = parseFloat(row.querySelector('.metric-weight-inp').value) || 0;
+    var th = {};
+    row.querySelectorAll('.metric-th-inp').forEach(function(inp){ th[inp.getAttribute('data-level')] = parseFloat(inp.value) || 0; });
+    metrics.push(Object.assign({}, catalog, { enabled: enabled, weight: weight, th: th }));
+  });
+  var cfg = { metrics: metrics, rules: document.getElementById('cfg-rules').value.trim(), mos: 20 };
+  LS.s('bfa_method', cfg);
+  var ok = await window.DB.save('bfa_method', cfg);
+  var st = document.getElementById('settingsMethodStatus');
+  if(st){ st.textContent = ok ? '✓ Método guardado!' : '✓ Guardado localmente.'; st.style.color='#16a34a'; }
+  setTimeout(function(){ closeSettingsModal(); }, 900);
+}
+
   ['api','method','tickers'].forEach(function(t){
     var btn = document.getElementById('stab-'+t);
     var content = document.getElementById('stab-content-'+t);
@@ -1650,7 +1757,24 @@ function buildStockDetail(s){
       +'<div class="pi"><div class="pi-label">P&amp;L</div><div class="pi-value" style="color:'+pnlC+'">'+(pnl!=null?(pnl>0?'+':'')+pnl.toFixed(2)+'%':'—')+'</div></div>'
       +'<div class="pi"><div class="pi-label">Score Buffett</div><div class="pi-value" style="color:'+(d.buffett_score>=65?'var(--green)':d.buffett_score>=40?'var(--amber)':'var(--red)')+'">'+( d.buffett_score||'—')+'/100</div></div>'
     +'</div>'
-    +(d.score_breakdown&&d.score_breakdown.length?function(){var id='sbd-'+s.ticker;return '<div style="margin:10px 0 4px;"><button onclick="var el=document.getElementById(\''+id+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';" style="font-size:10px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">▾ Ver breakdown score '+(d.buffett_score||0)+'/100</button><div id="'+id+'" style="display:none;margin-top:6px;background:#f8faff;border:1px solid var(--border);border-radius:6px;padding:8px 10px;">'+d.score_breakdown.map(function(b){var pct=b.max>0?b.pts/b.max:0;var col=pct>=0.7?'var(--green)':pct>=0.4?'var(--amber)':'var(--red)';return '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border);font-size:10px;"><span style="color:var(--text2);">'+b.label+' <span style="color:var(--muted);">('+b.value+')</span></span><span style="font-weight:700;color:'+col+'">'+b.pts+'/'+b.max+'</span></div>';}).join('')+'</div></div>';}():'')
+    +(d.score_breakdown&&d.score_breakdown.length?function(){var id='sbd-'+s.ticker;return '<div style="margin:10px 0 4px;"><button onclick="var el=document.getElementById(\''+id+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';" style="font-size:10px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">▾ Ver breakdown score '+(d.buffett_score||0)+'/100</button><div id="'+id+'" style="display:none;margin-top:6px;background:#f8faff;border:1px solid var(--border);border-radius:6px;padding:8px 10px;">'+d.score_breakdown.map(function(b){
+  var col=b.pts>=80?'var(--green)':b.pts>=60?'#16a34a':b.pts>=35?'var(--amber)':'var(--red)';
+  var bg=b.pts>=80?'#d1fae5':b.pts>=60?'#d1fae5':b.pts>=35?'#fef3c7':'#fee2e2';
+  var barW=b.pts+'%';
+  return '<div style="padding:5px 0;border-bottom:1px solid var(--border);">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--text2);">'+b.label+'</span>'
+      +'<div style="display:flex;align-items:center;gap:5px;">'
+        +'<span style="font-size:9px;color:var(--muted);">'+b.value+'</span>'
+        +'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:'+bg+';color:'+col+'">'+b.rating+'</span>'
+        +'<span style="font-size:9px;color:var(--muted);">peso '+b.weight+'%</span>'
+      +'</div>'
+    +'</div>'
+    +'<div style="height:4px;background:var(--border);border-radius:2px;">'
+      +'<div style="height:4px;width:'+barW+';background:'+col+';border-radius:2px;transition:width .3s;"></div>'
+    +'</div>'
+  +'</div>';
+}).join('')+'</div></div>';}():'')
     +(d.next_earnings?'<div class="ep"><div class="ep-label">Proximos Resultados</div><div class="ep-date">'+d.next_earnings+'</div>'+(d.earnings_countdown?'<div class="ep-cd">'+d.earnings_countdown+'</div>':'')+'</div>':'')
     +(d.guidance?'<div class="gp"><div class="gp-label">Guidance</div><div class="gp-text">'+d.guidance+'</div></div>':'')
     +'<div class="port-section-label">Noticias Recentes</div>'
@@ -1751,7 +1875,24 @@ function closeStockDetail(){
         +'<div class="pi"><div class="pi-label">Atual '+(d.yahoo_currency||'USD')+(d.yahoo_market_state&&d.yahoo_market_state!=='REGULAR'?' <span style="font-size:8px;background:#f0f4ff;color:#6b84a8;padding:1px 4px;border-radius:3px;">'+d.yahoo_market_state+'</span>':'')+'</div>'      +'<div class="pi-value c-blue">$'+(d.current_price?d.current_price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</div>'      +(d.yahoo_change_pct!=null?'<div style="font-size:10px;font-weight:600;color:'+(d.yahoo_change_pct>=0?'var(--green)':'var(--red)')+';">'+(d.yahoo_change_pct>=0?'+':'')+d.yahoo_change_pct.toFixed(2)+'% hoje <span style="font-size:9px;background:#e8f5e9;color:#15803d;padding:1px 5px;border-radius:3px;">Yahoo Finance</span></div>':'')      +'</div>'
         +'<div class="pi"><div class="pi-label">Meu Preco ('+cur+')</div><div class="pi-value">'+(s.buyPrice?sym+s.buyPrice.toFixed(2):'—')+'</div></div>'
         +'<div class="pi"><div class="pi-label">P&amp;L</div><div class="pi-value" style="color:'+pnlC+'">'+pnlStr+'</div></div>'
-        +'<div class="pi"><div class="pi-label">Score Buffett</div><div class="pi-value" style="color:'+(d.buffett_score>=65?'var(--green)':d.buffett_score>=40?'var(--amber)':'var(--red)')+'">'+( d.buffett_score||'—')+'/100</div></div>'+'</div>'      +(d.score_breakdown&&d.score_breakdown.length?function(){var id='sbd-'+s.ticker;return '<div style="margin:10px 0 4px;"><button onclick="var el=document.getElementById(\''+id+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';" style="font-size:10px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">▾ Ver breakdown score '+(d.buffett_score||0)+'/100</button><div id="'+id+'" style="display:none;margin-top:6px;background:#f8faff;border:1px solid var(--border);border-radius:6px;padding:8px 10px;">'+ d.score_breakdown.map(function(b){var pct=b.max>0?b.pts/b.max:0;var col=pct>=0.7?'var(--green)':pct>=0.4?'var(--amber)':'var(--red)';return '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border);font-size:10px;"><span style="color:var(--text2);">'+b.label+' <span style="color:var(--muted);">('+b.value+')</span></span><span style="font-weight:700;color:'+col+'">'+b.pts+'/'+b.max+'</span></div>';}).join('')+'</div></div>';}():'')      +(d.next_earnings?'<div class="ep"><div class="ep-label">Proximos Resultados</div><div class="ep-date">'+d.next_earnings+'</div>'+(d.earnings_countdown?'<div class="ep-cd">'+d.earnings_countdown+'</div>':'')+'</div>':'')
+        +'<div class="pi"><div class="pi-label">Score Buffett</div><div class="pi-value" style="color:'+(d.buffett_score>=65?'var(--green)':d.buffett_score>=40?'var(--amber)':'var(--red)')+'">'+( d.buffett_score||'—')+'/100</div></div>'+'</div>'      +(d.score_breakdown&&d.score_breakdown.length?function(){var id='sbd-'+s.ticker;return '<div style="margin:10px 0 4px;"><button onclick="var el=document.getElementById(\''+id+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';" style="font-size:10px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">▾ Ver breakdown score '+(d.buffett_score||0)+'/100</button><div id="'+id+'" style="display:none;margin-top:6px;background:#f8faff;border:1px solid var(--border);border-radius:6px;padding:8px 10px;">'+ d.score_breakdown.map(function(b){
+  var col=b.pts>=80?'var(--green)':b.pts>=60?'#16a34a':b.pts>=35?'var(--amber)':'var(--red)';
+  var bg=b.pts>=80?'#d1fae5':b.pts>=60?'#d1fae5':b.pts>=35?'#fef3c7':'#fee2e2';
+  var barW=b.pts+'%';
+  return '<div style="padding:5px 0;border-bottom:1px solid var(--border);">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--text2);">'+b.label+'</span>'
+      +'<div style="display:flex;align-items:center;gap:5px;">'
+        +'<span style="font-size:9px;color:var(--muted);">'+b.value+'</span>'
+        +'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:'+bg+';color:'+col+'">'+b.rating+'</span>'
+        +'<span style="font-size:9px;color:var(--muted);">peso '+b.weight+'%</span>'
+      +'</div>'
+    +'</div>'
+    +'<div style="height:4px;background:var(--border);border-radius:2px;">'
+      +'<div style="height:4px;width:'+barW+';background:'+col+';border-radius:2px;transition:width .3s;"></div>'
+    +'</div>'
+  +'</div>';
+}).join('')+'</div></div>';}():'')      +(d.next_earnings?'<div class="ep"><div class="ep-label">Proximos Resultados</div><div class="ep-date">'+d.next_earnings+'</div>'+(d.earnings_countdown?'<div class="ep-cd">'+d.earnings_countdown+'</div>':'')+'</div>':'')
       +(d.guidance?'<div class="gp"><div class="gp-label">Guidance</div><div class="gp-text">'+d.guidance+'</div></div>':'')
       +'<div class="port-section-label">Noticias Recentes</div>'
       +'<div class="news-list">'+news+'</div>'
@@ -1766,76 +1907,66 @@ function closeStockDetail(){
 }
 
 // ── BUFFETT SCORE — calculated locally, transparent weights ──
-// Total 100pts across 7 criteria based on real Yahoo/FMP data
+// ── BUFFETT SCORE — driven by user metric configuration ──
 function calcBuffettScore(fund, dcf, price){
   if(!fund) return {score:0, breakdown:[]};
+  var metrics = getActiveMetrics().filter(function(m){ return m.enabled; });
   var breakdown = [];
-  var total = 0;
-  var maxTotal = 0; // track available points (skip criteria with no data)
+  var totalWeighted = 0;
+  var totalWeight = 0;
 
-  // 1. ROE 5yr avg — 20pts
-  var roe = fund.roeAvg5!=null ? fund.roeAvg5*100 : (fund.roe!=null ? fund.roe*100 : null);
-  if(roe!=null){
-    var roePts = roe>=25?20 : roe>=20?17 : roe>=15?13 : roe>=10?7 : roe>=5?3 : 0;
-    breakdown.push({label:'ROE médio 5a',value:roe.toFixed(1)+'%',pts:roePts,max:20});
-    total+=roePts; maxTotal+=20;
-  }
-
-  // 2. Net margin TTM — 15pts
-  var nm = fund.netMargin!=null ? fund.netMargin*100 : null;
-  if(nm!=null){
-    var nmPts = nm>=25?15 : nm>=20?13 : nm>=15?10 : nm>=10?6 : nm>=5?3 : nm>=0?1 : 0;
-    breakdown.push({label:'Margem líquida',value:nm.toFixed(1)+'%',pts:nmPts,max:15});
-    total+=nmPts; maxTotal+=15;
-  }
-
-  // 3. Gross margin avg 5yr — 10pts
-  var gm = fund.grossMarginAvg5!=null ? fund.grossMarginAvg5*100 : (fund.grossMargin!=null ? fund.grossMargin*100 : null);
-  if(gm!=null){
-    var gmPts = gm>=60?10 : gm>=50?9 : gm>=40?7 : gm>=30?4 : gm>=20?2 : 0;
-    breakdown.push({label:'Margem bruta',value:gm.toFixed(1)+'%',pts:gmPts,max:10});
-    total+=gmPts; maxTotal+=10;
-  }
-
-  // 4. Revenue CAGR 5yr — 15pts
-  var rcagr = fund.revenueCagr5!=null ? fund.revenueCagr5*100 : null;
-  if(rcagr!=null){
-    var rcPts = rcagr>=20?15 : rcagr>=15?13 : rcagr>=10?10 : rcagr>=7?7 : rcagr>=3?4 : rcagr>=0?1 : 0;
-    breakdown.push({label:'Crescimento receita 5a',value:rcagr.toFixed(1)+'%/a',pts:rcPts,max:15});
-    total+=rcPts; maxTotal+=15;
-  }
-
-  // 5. Debt/FCF — 10pts
-  var debt = (fund.totalDebt!=null&&fund.fcf&&fund.fcf>0) ? fund.totalDebt/fund.fcf : null;
-  if(debt!=null){
-    var dPts = debt<0.5?10 : debt<1?9 : debt<2?7 : debt<3?5 : debt<5?2 : 0;
-    breakdown.push({label:'Dívida/FCF',value:debt.toFixed(1)+'x',pts:dPts,max:10});
-    total+=dPts; maxTotal+=10;
-  } else if(fund.totalDebt!=null&&fund.totalDebt===0){
-    breakdown.push({label:'Dívida/FCF',value:'Sem dívida',pts:10,max:10});
-    total+=10; maxTotal+=10;
-  }
-
-  // 6. Margem de segurança DCF — 20pts
+  // Build a flat data object from fund + derived values
   var mos = (price>0&&dcf&&dcf.intrinsicValue>0) ? (dcf.intrinsicValue-price)/dcf.intrinsicValue*100 : null;
-  if(mos!=null){
-    var mosPts = mos>=40?20 : mos>=30?16 : mos>=20?11 : mos>=10?5 : mos>=0?1 : 0;
-    breakdown.push({label:'Margem segurança DCF',value:mos.toFixed(1)+'%',pts:mosPts,max:20});
-    total+=mosPts; maxTotal+=20;
-  }
+  var debtFcf = (fund.totalDebt!=null&&fund.fcf&&fund.fcf>0) ? fund.totalDebt/fund.fcf : (fund.totalDebt===0?0:null);
+  var data = {
+    roe:           fund.roe!=null ? fund.roe*100 : (fund.roeAvg5!=null ? fund.roeAvg5*100 : null),
+    roic:          fund.roic!=null ? fund.roic*100 : null,
+    netMargin:     fund.netMargin!=null ? fund.netMargin*100 : null,
+    grossMargin:   fund.grossMarginAvg5!=null ? fund.grossMarginAvg5*100 : (fund.grossMargin!=null ? fund.grossMargin*100 : null),
+    opMargin:      fund.opMargin!=null ? fund.opMargin*100 : null,
+    pe:            fund.pe,
+    peg:           fund.peg,
+    priceToBook:   fund.priceToBook,
+    revenueCagr5:  fund.revenueCagr5!=null ? fund.revenueCagr5*100 : null,
+    fcfCagr5:      fund.fcfCagr5!=null ? fund.fcfCagr5*100 : null,
+    epsGrowthNext5y: fund.epsGrowthNext5y!=null ? fund.epsGrowthNext5y*100 : null,
+    debtFcf:       debtFcf,
+    currentRatio:  fund.currentRatio,
+    dividendYield: fund.dividendYield!=null ? fund.dividendYield*100 : null,
+    _mos:          mos,
+    roa:           fund.roa!=null ? fund.roa*100 : null,
+  };
 
-  // 7. FCF CAGR 5yr — 10pts
-  var fcagr = fund.fcfCagr5!=null ? fund.fcfCagr5*100 : null;
-  if(fcagr!=null){
-    var fcPts = fcagr>=20?10 : fcagr>=15?9 : fcagr>=10?7 : fcagr>=5?4 : fcagr>=0?1 : 0;
-    breakdown.push({label:'FCF CAGR 5a',value:fcagr.toFixed(1)+'%/a',pts:fcPts,max:10});
-    total+=fcPts; maxTotal+=10;
-  }
+  metrics.forEach(function(m){
+    var val = data[m.key];
+    if(val==null) return;
+    var th = m.th;
+    var pts; // 0-100 scale per metric
+    var levels = m.dir==='higher'
+      ? [th.bad, th.ok, th.good, th.great, th.super]
+      : [th.super, th.great, th.good, th.ok, th.bad]; // invert for lower=better
 
-  // Normalise to 100 if we have partial data
-  var score = maxTotal>0 ? Math.round((total/maxTotal)*100) : 0;
-  return {score:score, breakdown:breakdown, rawPts:total, maxPts:maxTotal};
+    if(m.dir==='higher'){
+      pts = val>=th.super?100 : val>=th.great?80 : val>=th.good?60 : val>=th.ok?35 : val>=th.bad?15 : 0;
+    } else {
+      pts = val<=th.super?100 : val<=th.great?80 : val<=th.good?60 : val<=th.ok?35 : val<=th.bad?15 : 0;
+    }
+
+    var label = m.dir==='higher'
+      ? (pts>=100?'Super':pts>=80?'Ótimo':pts>=60?'Bom':pts>=35?'Médio':pts>0?'Fraco':'Mau')
+      : (pts>=100?'Excelente':pts>=80?'Bom':pts>=60?'Médio':pts>=35?'Alto':pts>0?'Elevado':'Excessivo');
+
+    var valStr = Number.isInteger(val) ? val+m.unit : val.toFixed(1)+m.unit;
+    var weighted = (pts / 100) * m.weight;
+    totalWeighted += weighted;
+    totalWeight += m.weight;
+    breakdown.push({ label: m.label, value: valStr, rating: label, pts: Math.round(pts), max: 100, weight: m.weight, weighted: weighted });
+  });
+
+  var score = totalWeight > 0 ? Math.round((totalWeighted / totalWeight) * 100) : 0;
+  return { score: score, breakdown: breakdown };
 }
+
 
 // ── YAHOO FINANCE REAL PRICE + FUNDAMENTALS + DCF ──
 // Normalize ticker to Yahoo Finance format
