@@ -735,7 +735,7 @@ function pickFmpTickers(rankedTickers){
 async function fetchFmpFundamentals(ticker){
   var key = getFmpKey();
   if(!key) return null;
-  var yTicker = ticker.replace(/\.US$/,'');
+  var yTicker = normalizeTickerForYahoo(ticker);
   try{
     // Fetch key metrics + ratios in 2 calls
     var baseUrl = 'https://financialmodelingprep.com/api/v3';
@@ -1587,6 +1587,36 @@ function calcBuffettScore(fund, dcf, price){
 }
 
 // ── YAHOO FINANCE REAL PRICE + FUNDAMENTALS + DCF ──
+// Normalize ticker to Yahoo Finance format
+// Removes exchange suffixes (.US, .EU, .L, .PA, etc.) that Yahoo doesn't use
+// Exception: keeps suffixes Yahoo needs (e.g. .TO for Toronto, .AX for ASX)
+function normalizeTickerForYahoo(ticker){
+  // Map of suffixes to their Yahoo equivalents
+  var remove = /\.(US|EU|DE|FR|NL|IT|ES|BE|PT|FI|SE|NO|DK|AT|CH)$/i;
+  var keepMap = {
+    'L':  '.L',   // London
+    'TO': '.TO',  // Toronto
+    'AX': '.AX',  // Australia
+    'HK': '.HK',  // Hong Kong
+    'T':  '.T',   // Tokyo
+    'CO': '.CO',  // Copenhagen
+    'ST': '.ST',  // Stockholm
+    'OL': '.OL',  // Oslo
+    'PA': '.PA',  // Paris Euronext
+    'AS': '.AS',  // Amsterdam
+    'MI': '.MI',  // Milan
+    'MC': '.MC',  // Madrid
+  };
+  // Check if it has a suffix
+  var parts = ticker.split('.');
+  if(parts.length < 2) return ticker;
+  var suffix = parts[parts.length-1].toUpperCase();
+  if(remove.test('.'+suffix)) return parts.slice(0,-1).join('.');
+  if(keepMap[suffix]) return parts.slice(0,-1).join('.')+keepMap[suffix];
+  // Unknown suffix — remove it (Yahoo usually just uses the base symbol)
+  return parts.slice(0,-1).join('.');
+}
+
 async function yahooFetch(url){
   // Use our own Vercel Edge Function proxy — avoids Yahoo Finance CORS/IP blocks
   var proxyUrl = '/api/yahoo?url=' + encodeURIComponent(url);
@@ -1596,7 +1626,7 @@ async function yahooFetch(url){
 }
 
 async function fetchYahooPrice(ticker){
-  var yTicker = ticker.replace(/\.US$/,'');
+  var yTicker = normalizeTickerForYahoo(ticker);
   var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(yTicker)+'?interval=1d&range=1d';
   try{
     var data = await yahooFetch(url);
@@ -1619,7 +1649,7 @@ async function fetchYahooPrice(ticker){
 }
 
 async function fetchYahooFundamentals(ticker){
-  var yTicker = ticker.replace(/\.US$/,'');
+  var yTicker = normalizeTickerForYahoo(ticker);
   var url = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/'+encodeURIComponent(yTicker)
     +'?modules=financialData,defaultKeyStatistics,incomeStatementHistory,'
     +'cashflowStatementHistory,balanceSheetHistory,summaryDetail,earningsTrend';
