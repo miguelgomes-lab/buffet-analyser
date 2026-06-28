@@ -250,7 +250,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
 .inp:focus{outline:none;border-color:var(--blue);}
 .add-btn{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;align-self:flex-end;letter-spacing:.01em;}
 .add-btn:hover{background:var(--blue2);}
-.port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;}
+.port-grid{display:flex;flex-direction:column;background:var(--bg2);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
 .pcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;}
 .pcard-hdr{padding:14px 18px 11px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .pc-ticker{font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;letter-spacing:-.01em;}
@@ -1571,10 +1571,164 @@ function renderPortfolio(){
 }
 
 function buildPortCard(s){
-  var d=s.data;
-  var sym=s.currency==='EUR'?'€':'$';
-  var cur=s.currency||'USD';
-  var upd=s.lastUpdated?new Date(s.lastUpdated).toLocaleDateString('pt-PT'):'';
+  var d = s.data;
+  var sym = s.currency==='EUR' ? '€' : '$';
+  var cur = s.currency || 'USD';
+  var ticker = s.ticker;
+  var baseSym = ticker.replace(/\..+$/,'');
+  var logoUrl = 'https://financialmodelingprep.com/image-stock/'+baseSym+'.png';
+
+  // Price & P&L
+  var currentPrice = d && d.current_price;
+  var pnlPct = s.buyPrice && currentPrice ? ((currentPrice - s.buyPrice) / s.buyPrice * 100) : null;
+  var totalValue = currentPrice && s.qty ? currentPrice * s.qty : null;
+  var pnlC = pnlPct > 0 ? 'var(--green)' : pnlPct < 0 ? 'var(--red)' : 'var(--muted)';
+  var pnlStr = pnlPct != null ? (pnlPct > 0 ? '+' : '') + pnlPct.toFixed(2) + '%' : '—';
+
+  // Logo HTML
+  var logoHtml = '<div style="width:36px;height:36px;border-radius:10px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+    +'<img src="'+logoUrl+'" style="width:36px;height:36px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"/>'
+    +'<span style="display:none;width:36px;height:36px;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--blue);font-family:JetBrains Mono,monospace">'+baseSym.slice(0,2)+'</span>'
+    +'</div>';
+
+  // No data yet — compact skeleton
+  if(!d) return '<div class="prow" id="pc-'+ticker+'" onclick="openStockDetail(\''+ticker+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;" onmouseenter="this.style.background=\'var(--bg3)\'" onmouseleave="this.style.background=\'\'">'
+    +logoHtml
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:14px;font-weight:800;font-family:JetBrains Mono,monospace;color:var(--text)">'+ticker+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:1px">A carregar...</div>'
+    +'</div>'
+    +'<div style="text-align:right;flex-shrink:0">'
+      +'<div style="font-size:11px;color:var(--muted)">'+(s.qty?s.qty+' ações':'')+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text2);margin-top:1px">'+(s.buyPrice?sym+s.buyPrice.toFixed(2):'—')+'</div>'
+    +'</div>'
+    +'<div style="color:var(--muted);font-size:16px;margin-left:4px">›</div>'
+    +'</div>';
+
+  var rc = d.rating==='COMPRAR'?'rb-buy':d.rating==='EVITAR'?'rb-avoid':'rb-wait';
+
+  // Compact list row
+  return '<div class="prow" id="pc-'+ticker+'" onclick="openStockDetail(\''+ticker+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;" onmouseenter="this.style.background=\'var(--bg3)\'" onmouseleave="this.style.background=\'\'">'
+    +logoHtml
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+        +'<span style="font-size:14px;font-weight:800;font-family:JetBrains Mono,monospace;color:var(--text)">'+ticker+'</span>'
+        +'<span class="'+rc+'" style="font-size:9px;padding:1px 6px">'+d.rating+'</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(d.company_name||'')+'</div>'
+    +'</div>'
+    +'<div style="text-align:right;flex-shrink:0;min-width:80px">'
+      +'<div style="font-size:13px;font-weight:800;color:var(--text)">'+(currentPrice ? sym+currentPrice.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—')+'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:'+pnlC+';margin-top:1px">'+pnlStr+'</div>'
+    +'</div>'
+    +'<div style="text-align:right;flex-shrink:0;min-width:70px">'
+      +'<div style="font-size:11px;color:var(--muted)">'+(s.qty ? s.qty+' ações' : '')+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text2);margin-top:1px">'+(totalValue ? sym+totalValue.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : (s.buyPrice?sym+s.buyPrice.toFixed(2):'—'))+'</div>'
+    +'</div>'
+    +'<div style="color:var(--muted);font-size:18px;margin-left:4px;font-weight:300">›</div>'
+    +'</div>';
+}
+
+function buildStockDetail(s){
+  var d = s.data;
+  var sym = s.currency==='EUR' ? '€' : '$';
+  var cur = s.currency || 'USD';
+  var upd = s.lastUpdated ? new Date(s.lastUpdated).toLocaleDateString('pt-PT') : '';
+  if(!d) return '<div style="text-align:center;padding:40px"><div style="font-size:13px;color:var(--muted);margin-bottom:16px">Sem dados de análise</div><button onclick="fetchStock(\''+s.ticker+'\')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Claude</button></div>';
+  var pnl = s.buyPrice&&d.current_price ? ((d.current_price-s.buyPrice)/s.buyPrice*100) : null;
+  var pnlC = pnl>0?'var(--green)':pnl<0?'var(--red)':'var(--muted)';
+  var mosC = d.margin_of_safety>=30?'var(--green)':d.margin_of_safety>=15?'var(--amber)':'var(--red)';
+  var rc = d.rating==='COMPRAR'?'rb-buy':d.rating==='EVITAR'?'rb-avoid':'rb-wait';
+  var news = (d.news||[]).slice(0,3).map(function(n){return '<div class="ni"><div class="ni-title">'+(n.title||'')+'</div><div class="ni-meta">'+(n.source||'')+' · '+(n.date||'')+'</div></div>';}).join('')||'<div style="font-size:11px;color:var(--muted)">Sem noticias</div>';
+  return '<div class="pcard-body">'
+    +'<div class="pgrid4">'
+      +'<div class="pi"><div class="pi-label">Atual '+(d.yahoo_currency||'USD')+(d.yahoo_market_state&&d.yahoo_market_state!=='REGULAR'?' <span style="font-size:8px;background:#f0f4ff;color:#6b84a8;padding:1px 4px;border-radius:3px;">'+d.yahoo_market_state+'</span>':'')+'</div>'
+        +'<div class="pi-value c-blue">$'+(d.current_price?d.current_price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—')+'</div>'
+        +(d.yahoo_change_pct!=null?'<div style="font-size:10px;font-weight:600;color:'+(d.yahoo_change_pct>=0?'var(--green)':'var(--red)')+';">'+(d.yahoo_change_pct>=0?'+':'')+d.yahoo_change_pct.toFixed(2)+'% hoje</div>':'')
+      +'</div>'
+      +'<div class="pi"><div class="pi-label">Meu Preço ('+cur+')</div><div class="pi-value">'+(s.buyPrice?sym+s.buyPrice.toFixed(2):'—')+'</div></div>'
+      +'<div class="pi"><div class="pi-label">P&amp;L</div><div class="pi-value" style="color:'+pnlC+'">'+(pnl!=null?(pnl>0?'+':'')+pnl.toFixed(2)+'%':'—')+'</div></div>'
+      +'<div class="pi"><div class="pi-label">Score Buffett</div><div class="pi-value" style="color:'+(d.buffett_score>=65?'var(--green)':d.buffett_score>=40?'var(--amber)':'var(--red)')+'">'+( d.buffett_score||'—')+'/100</div></div>'
+    +'</div>'
+    +(d.score_breakdown&&d.score_breakdown.length?function(){var id='sbd-'+s.ticker;return '<div style="margin:10px 0 4px;"><button onclick="var el=document.getElementById(\''+id+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';" style="font-size:10px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">▾ Ver breakdown score '+(d.buffett_score||0)+'/100</button><div id="'+id+'" style="display:none;margin-top:6px;background:#f8faff;border:1px solid var(--border);border-radius:6px;padding:8px 10px;">'+d.score_breakdown.map(function(b){var pct=b.max>0?b.pts/b.max:0;var col=pct>=0.7?'var(--green)':pct>=0.4?'var(--amber)':'var(--red)';return '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border);font-size:10px;"><span style="color:var(--text2);">'+b.label+' <span style="color:var(--muted);">('+b.value+')</span></span><span style="font-weight:700;color:'+col+'">'+b.pts+'/'+b.max+'</span></div>';}).join('')+'</div></div>';}():'')
+    +(d.next_earnings?'<div class="ep"><div class="ep-label">Proximos Resultados</div><div class="ep-date">'+d.next_earnings+'</div>'+(d.earnings_countdown?'<div class="ep-cd">'+d.earnings_countdown+'</div>':'')+'</div>':'')
+    +(d.guidance?'<div class="gp"><div class="gp-label">Guidance</div><div class="gp-text">'+d.guidance+'</div></div>':'')
+    +'<div class="port-section-label">Noticias Recentes</div>'
+    +'<div class="news-list">'+news+'</div>'
+    +(d.thesis?'<div style="font-size:11px;color:var(--text2);background:var(--blue-l);border-radius:8px;padding:8px 11px;border-left:3px solid var(--blue-m);line-height:1.55">'+d.thesis+'</div>':'')
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--muted);">Moat '+(d.moat_score||0)+'/10</span>'
+      +'<div style="display:flex;gap:2px;">'+(Array.from({length:10},function(_,j){return '<div style="width:8px;height:8px;border-radius:50%;background:'+(j<(d.moat_score||0)?'var(--blue)':'var(--border)')+'"></div>';}).join(''))+'</div>'
+      +(d.moat_justification?'<span style="font-size:10px;color:var(--muted);font-style:italic;">— '+d.moat_justification+'</span>':'')
+    +'</div>'
+    +(d.dcf?'<div style="margin-top:12px;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:8px;letter-spacing:.04em;">DCF — VALOR INTRÍNSECO REAL</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">'
+        +'<div><div style="font-size:9px;color:var(--muted);">Crescimento FCF</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.fcfGrowthUsed*100).toFixed(1)+'%/ano → '+(d.dcf.growth2*100).toFixed(1)+'%</div></div>'
+        +'<div><div style="font-size:9px;color:var(--muted);">WACC</div><div style="font-size:11px;font-weight:700;color:var(--text);">'+(d.dcf.wacc*100).toFixed(1)+'%</div></div>'
+      +'</div>'
+      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'
+        +'<span style="font-size:10px;color:var(--muted);">Valor intrínseco/ação</span>'
+        +'<span style="font-size:14px;font-weight:800;color:var(--green);">$'+d.intrinsic_value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'
+      +'</div>'
+    +'</div>':'')
+    +'</div>';
+}
+
+function openStockDetail(ticker){
+  var s = portfolio.find(function(x){return x.ticker===ticker;});
+  if(!s) return;
+  var d = s.data;
+  var sym = s.currency==='EUR' ? '€' : '$';
+  var cur = s.currency || 'USD';
+  var baseSym = ticker.replace(/\..+$/,'');
+  var logoUrl = 'https://financialmodelingprep.com/image-stock/'+baseSym+'.png';
+  var rc = d ? (d.rating==='COMPRAR'?'rb-buy':d.rating==='EVITAR'?'rb-avoid':'rb-wait') : '';
+
+  var overlay = document.getElementById('stockDetailOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'stockDetailOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;';
+    overlay.onclick = function(e){ if(e.target===overlay) closeStockDetail(); };
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = '<div id="stockDetailPanel" style="background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.18);">'
+    // Header
+    +'<div style="display:flex;align-items:center;gap:12px;padding:16px 16px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1;border-radius:20px 20px 0 0;">'
+      +'<div style="width:40px;height:40px;border-radius:11px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<img src="'+logoUrl+'" style="width:40px;height:40px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"/>'
+        +'<span style="display:none;width:40px;height:40px;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--blue);font-family:JetBrains Mono,monospace">'+baseSym.slice(0,2)+'</span>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<span style="font-size:16px;font-weight:800;font-family:JetBrains Mono,monospace">'+ticker+'</span>'
+          +(d&&d.rating?'<span class="'+rc+'" style="font-size:9px;padding:2px 7px">'+d.rating+'</span>':'')
+          +'<span style="font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-l);border:1px solid var(--blue-m);border-radius:4px;padding:1px 6px">'+cur+'</span>'
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(d&&d.company_name||ticker)+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'
+        +'<button onclick="fetchStock(\''+ticker+'\')" style="font-size:11px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2)">Atualizar</button>'
+        +'<button onclick="if(confirm(\'Remover '+ticker+'?\'))removeStock(\''+ticker+'\')" style="font-size:11px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--red-bd);background:var(--red-bg);color:var(--red)">Remover</button>'
+        +'<button onclick="closeStockDetail()" style="font-size:18px;font-weight:300;padding:4px 10px;border-radius:7px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--muted);line-height:1">✕</button>'
+      +'</div>'
+    +'</div>'
+    // Body
+    +buildStockDetail(s)
+    +'</div>';
+
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeStockDetail(){
+  var overlay = document.getElementById('stockDetailOverlay');
+  if(overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
   var _sym2=s.currency==='EUR'?'€':'$';
   if(!d)return '<div class="pcard fu" id="pc-'+s.ticker+'"><div class="pcard-hdr"><div><div class="pc-ticker">'+s.ticker+'</div><div class="pc-name" style="color:var(--muted)">Sem dados</div></div><div class="pc-btns"><button class="pc-btn pc-btn-r" onclick="fetchStock(\''+s.ticker+'\')">Analisar</button><button class="pc-btn pc-btn-d" onclick="removeStock(\''+s.ticker+'\')">Remover</button></div></div><div class="pcard-body"><div style="text-align:center;padding:28px"><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Preco de compra: '+(s.buyPrice?_sym2+s.buyPrice.toFixed(2):'—')+'</div><button onclick="fetchStock(\''+s.ticker+'\''+')" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Analisar com Claude</button></div></div></div>';
   var pnl=s.buyPrice&&d.current_price?((d.current_price-s.buyPrice)/s.buyPrice*100):null;
