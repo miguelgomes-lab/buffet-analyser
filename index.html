@@ -1585,11 +1585,36 @@ function calcBuffettScore(fund, dcf, price){
 
 // ── YAHOO FINANCE REAL PRICE + FUNDAMENTALS + DCF ──
 async function yahooFetch(url){
-  var proxy = 'https://api.allorigins.win/get?url='+encodeURIComponent(url);
-  var res = await fetch(proxy, {signal: AbortSignal.timeout(10000)});
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  var outer = await res.json();
-  return JSON.parse(outer.contents);
+  // Multiple CORS proxy fallbacks for reliability
+  var proxies = [
+    async (u) => {
+      var res = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(u), {signal: AbortSignal.timeout(8000)});
+      if(!res.ok) throw new Error('allorigins HTTP '+res.status);
+      var outer = await res.json();
+      if(!outer.contents) throw new Error('allorigins empty');
+      return JSON.parse(outer.contents);
+    },
+    async (u) => {
+      var res = await fetch('https://corsproxy.io/?url='+encodeURIComponent(u), {signal: AbortSignal.timeout(8000)});
+      if(!res.ok) throw new Error('corsproxy HTTP '+res.status);
+      return await res.json();
+    },
+    async (u) => {
+      var res = await fetch('https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u), {signal: AbortSignal.timeout(8000)});
+      if(!res.ok) throw new Error('codetabs HTTP '+res.status);
+      return await res.json();
+    }
+  ];
+  var lastErr;
+  for(var i=0; i<proxies.length; i++){
+    try{
+      return await proxies[i](url);
+    }catch(e){
+      console.warn('Proxy '+(i+1)+' failed:', e.message);
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('All proxies failed');
 }
 
 async function fetchYahooPrice(ticker){
