@@ -1,20 +1,31 @@
-export const config = { runtime: "edge" };
+const https = require('https');
+const http = require('http');
 
 let cachedCrumb = null;
 let cachedCookie = null;
 let crumbExpiry = 0;
 
 const BROWSER_HEADERS = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-  "Accept": "application/json, text/plain, */*",
-  "Accept-Language": "en-US,en;q=0.9",
-  "Accept-Encoding": "gzip, deflate, br",
-  "Referer": "https://finance.yahoo.com/",
-  "Origin": "https://finance.yahoo.com",
-  "sec-fetch-dest": "empty",
-  "sec-fetch-mode": "cors",
-  "sec-fetch-site": "same-site"
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer': 'https://finance.yahoo.com/',
+  'Origin': 'https://finance.yahoo.com'
 };
+
+function fetchUrl(url, extraHeaders = {}) {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https') ? https : http;
+    const options = { headers: { ...BROWSER_HEADERS, ...extraHeaders } };
+    const req = lib.get(url, options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve({ status: res.statusCode, text: data, headers: res.headers }));
+    });
+    req.on('error', reject);
+    req.setTimeout(10000, () => { req.destroy(); reject(new Error('Timeout')); });
+  });
+}
 
 async function getYahooCrumb() {
   const now = Date.now();
@@ -22,18 +33,14 @@ async function getYahooCrumb() {
     return { crumb: cachedCrumb, cookie: cachedCookie };
   }
   try {
-    const cookieRes = await fetch("https://fc.yahoo.com", {
-      headers: { ...BROWSER_HEADERS, "Accept": "text/html,application/xhtml+xml,*/*" },
-      redirect: "follow"
-    });
-    const cookieHeader = cookieRes.headers.get("set-cookie") || "";
-    const cookie = cookieHeader.split(",").map(c => c.split(";")[0].trim()).filter(Boolean).join("; ");
-    const crumbRes = await fetch("https://query1.finance.yahoo.com/v1/test/getcrumb", {
-      headers: { ...BROWSER_HEADERS, "Cookie": cookie }
-    });
-    const crumb = await crumbRes.text();
-    if (crumb && crumb.length < 50 && !crumb.includes("<") && !crumb.includes("error")) {
-      cachedCrumb = crumb.trim();
+    const r1 = await fetchUrl('https://fc.yahoo.com');
+    const cookieHeader = r1.headers['set-cookie'] || [];
+    const cookies = Array.isArray(cookieHeader) ? cookieHeader : [cookieHeader];
+    const cookie = cookies.map(c => c.split(';')[0].trim()).filter(Boolean).join('; ');
+    const r2 = await fetchUrl('https://query1.finance.yahoo.com/v1/test/getcrumb', { 'Cookie': cookie });
+    const crumb = r2.text.trim();
+    if (crumb && crumb.length < 50 && !crumb.includes('<')) {
+      cachedCrumb = crumb;
       cachedCookie = cookie;
       crumbExpiry = now + 30 * 60 * 1000;
     }
@@ -41,60 +48,44 @@ async function getYahooCrumb() {
   return { crumb: cachedCrumb, cookie: cachedCookie };
 }
 
-async function yahooFetch(url, extraHeaders = {}) {
+async function yahooFetch(url) {
   const { crumb, cookie } = await getYahooCrumb();
-  let fetchUrl = url;
-  const fetchHeaders = { ...BROWSER_HEADERS, ...extraHeaders };
-  if (cookie) fetchHeaders["Cookie"] = cookie;
-  if (crumb) {
-    const sep = url.includes("?") ? "&" : "?";
-    fetchUrl = url + sep + "crumb=" + encodeURIComponent(crumb);
-  }
-  const res = await fetch(fetchUrl, { headers: fetchHeaders });
-  // If 401, clear cache and retry once
+  const extraHeaders = {};
+  if (cookie) extraHeaders['Cookie'] = cookie;
+  const fetchUrl2 = crumb ? url + (url.includes('?') ? '&' : '?') + 'crumb=' + encodeURIComponent(crumb) : url;
+  let res = await fetchUrl(fetchUrl2, extraHeaders);
   if (res.status === 401 || res.status === 403) {
     cachedCrumb = null; cachedCookie = null; crumbExpiry = 0;
     const { crumb: c2, cookie: ck2 } = await getYahooCrumb();
-    const h2 = { ...BROWSER_HEADERS };
-    if (ck2) h2["Cookie"] = ck2;
-    const u2 = c2 ? url + (url.includes("?") ? "&" : "?") + "crumb=" + encodeURIComponent(c2) : url;
-    return fetch(u2, { headers: h2 });
+    const h2 = ck2 ? { 'Cookie': ck2 } : {};
+    const u2 = c2 ? url + (url.includes('?') ? '&' : '?') + 'crumb=' + encodeURIComponent(c2) : url;
+    res = await fetchUrl(u2, h2);
   }
   return res;
 }
 
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const url = searchParams.get("url");
-  const search = searchParams.get("search");
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
 
-  const corsHeaders = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Cache-Control": "s-maxage=60, stale-while-revalidate=30"
-  };
-
-  // Yahoo Finance ticker search
-  if (search) {
-    try {
-      const searchUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(search)}&quotesCount=8&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query`;
-      const res = await yahooFetch(searchUrl);
-      const data = await res.text();
-      return new Response(data, { status: res.status, headers: { ...corsHeaders, "Cache-Control": "s-maxage=30" } });
-    } catch(e) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
-    }
-  }
-
-  if (!url || !url.startsWith("https://query")) {
-    return new Response("Bad request", { status: 400 });
-  }
+  const { url, search } = req.query;
 
   try {
-    const res = await yahooFetch(url);
-    const data = await res.text();
-    return new Response(data, { status: res.status, headers: corsHeaders });
+    if (search) {
+      const searchUrl = 'https://query1.finance.yahoo.com/v1/finance/search?q=' + encodeURIComponent(search) + '&quotesCount=8&newsCount=0&enableFuzzyQuery=false';
+      const r = await yahooFetch(searchUrl);
+      res.status(r.status).send(r.text);
+      return;
+    }
+
+    if (!url || !url.startsWith('https://query')) {
+      res.status(400).json({ error: 'Bad request' });
+      return;
+    }
+
+    const r = await yahooFetch(url);
+    res.status(r.status).send(r.text);
   } catch(e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    res.status(500).json({ error: e.message });
   }
-}
+};
