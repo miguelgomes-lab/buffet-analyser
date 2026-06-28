@@ -1518,7 +1518,13 @@ async function tickerSearchInput(q){
     try{
       var base2 = window.location.hostname.includes('netlify') ? '/.netlify/functions/yahoo' : '/api/yahoo';
       var res = await fetch(base2+'?search='+encodeURIComponent(q));
-      var data = await res.json();
+      var rawText = await res.text();
+      var data;
+      try{ data = JSON.parse(rawText); } catch(je){ 
+        drop.innerHTML='<div style="padding:10px 14px;font-size:11px;color:var(--red)">Erro: '+res.status+' '+rawText.slice(0,80)+'</div>'; 
+        return; 
+      }
+      if(data.error){ drop.innerHTML='<div style="padding:10px 14px;font-size:11px;color:var(--red)">Erro Yahoo: '+data.error+'</div>'; return; }
       var quotes = (data.quotes||[]).filter(function(q){ return q.symbol && (q.quoteType==='EQUITY' || q.quoteType==='ETF'); }).slice(0,8);
       if(!quotes.length){ drop.innerHTML='<div style="padding:10px 14px;font-size:11px;color:var(--muted)">Nenhum resultado</div>'; return; }
       tickerSearchActive = -1;
