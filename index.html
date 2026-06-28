@@ -1425,8 +1425,18 @@ async function tickerSearchInput(q){
       drop.innerHTML = quotes.map(function(q, i){
         var exch = q.exchDisp || q.exchange || '';
         var type = q.quoteType === 'ETF' ? ' <span style="font-size:9px;background:#f0f4ff;color:#6b84a8;padding:1px 5px;border-radius:3px;font-weight:700">ETF</span>' : '';
-        return '<div class="tsearch-item" data-idx="'+i+'" data-symbol="'+q.symbol+'" data-name="'+(q.shortname||q.longname||q.symbol)+'" data-exch="'+exch+'" onclick="selectTicker(\''+q.symbol+'\',\''+( q.shortname||q.longname||q.symbol).replace(/'/g,'`')+'\',\''+exch+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">'
-          +'<div><div style="font-size:12px;font-weight:800;color:var(--text);font-family:JetBrains Mono,monospace">'+q.symbol+type+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px">'+(q.shortname||q.longname||'')+'</div></div>'
+        var sym = q.symbol.replace(/\..+$/,''); // base ticker for logo
+        var logoUrl = 'https://financialmodelingprep.com/image-stock/'+sym+'.png';
+        var initials = sym.slice(0,2);
+        var logoHtml = '<div style="width:32px;height:32px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;">'
+          +'<img src="'+logoUrl+'" style="width:32px;height:32px;object-fit:contain;" '
+          +'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'"/>'
+          +'<span style="display:none;font-size:11px;font-weight:800;color:var(--blue);font-family:JetBrains Mono,monospace">'+initials+'</span>'
+          +'</div>';
+        var name = q.shortname||q.longname||q.symbol;
+        return '<div class="tsearch-item" data-idx="'+i+'" data-symbol="'+q.symbol+'" data-name="'+name+'" data-exch="'+exch+'" data-logo="'+logoUrl+'" onclick="selectTicker(\''+q.symbol+'\',\''+name.replace(/'/g,'`')+'\',\''+exch+'\',\''+logoUrl+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
+          +logoHtml
+          +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:800;color:var(--text);font-family:JetBrains Mono,monospace">'+q.symbol+type+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+'</div></div>'
           +'<div style="font-size:10px;color:var(--dim);font-weight:600;text-align:right;flex-shrink:0">'+exch+'</div>'
           +'</div>';
       }).join('');
@@ -1450,13 +1460,24 @@ function tickerSearchKey(e){
   else if(e.key==='Escape'){ drop.style.display='none'; }
 }
 
-function selectTicker(symbol, name, exch){
+function selectTicker(symbol, name, exch, logoUrl){
   document.getElementById('nTicker').value = symbol;
   document.getElementById('nTickerSearch').value = '';
   document.getElementById('tickerDropdown').style.display = 'none';
   var sel = document.getElementById('tickerSelected');
   sel.style.display = 'flex';
-  document.getElementById('tickerSelectedLabel').innerHTML = '<span style="font-family:JetBrains Mono,monospace">'+symbol+'</span> <span style="font-weight:400;color:var(--text2)">· '+name+'</span> <span style="font-size:9px;color:var(--muted)">'+exch+'</span>';
+  var sym = symbol.replace(/\..+$/,'');
+  var logo = logoUrl || ('https://financialmodelingprep.com/image-stock/'+sym+'.png');
+  document.getElementById('tickerSelectedLabel').innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px">'
+    +'<div style="width:24px;height:24px;border-radius:6px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<img src="'+logo+'" style="width:24px;height:24px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'block\'"/>'
+    +'<span style="display:none;font-size:9px;font-weight:800;color:var(--blue)">'+sym.slice(0,2)+'</span>'
+    +'</div>'
+    +'<span style="font-family:JetBrains Mono,monospace;font-weight:800;color:var(--blue)">'+symbol+'</span>'
+    +' <span style="font-weight:400;color:var(--text2)">'+name+'</span>'
+    +' <span style="font-size:9px;color:var(--muted)">'+exch+'</span>'
+    +'</div>';
   // Auto-set currency based on exchange
   var eurExchanges = ['ENX','EPA','AMS','ETR','BIT','BME','LSE','STO','CPH','HEL','OSL'];
   var currEl = document.getElementById('nCurrency');
