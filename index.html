@@ -1492,7 +1492,8 @@ async function tickerSearchInput(q){
   drop.style.display = 'block';
   tickerSearchTimer = setTimeout(async function(){
     try{
-      var res = await fetch('/api/yahoo?search='+encodeURIComponent(q));
+      var base2 = window.location.hostname.includes('netlify') ? '/.netlify/functions/yahoo' : '/api/yahoo';
+      var res = await fetch(base2+'?search='+encodeURIComponent(q));
       var data = await res.json();
       var quotes = (data.quotes||[]).filter(function(q){ return q.symbol && (q.quoteType==='EQUITY' || q.quoteType==='ETF'); }).slice(0,8);
       if(!quotes.length){ drop.innerHTML='<div style="padding:10px 14px;font-size:11px;color:var(--muted)">Nenhum resultado</div>'; return; }
@@ -1967,8 +1968,9 @@ function normalizeTickerForYahoo(ticker){
 }
 
 async function yahooFetch(url){
-  // Use our own Vercel Edge Function proxy — avoids Yahoo Finance CORS/IP blocks
-  var proxyUrl = '/api/yahoo?url=' + encodeURIComponent(url);
+  // Auto-detect proxy URL (Vercel or Netlify)
+  var base = window.location.hostname.includes('netlify') ? '/.netlify/functions/yahoo' : '/api/yahoo';
+  var proxyUrl = base + '?url=' + encodeURIComponent(url);
   var res = await fetch(proxyUrl, {signal: AbortSignal.timeout(12000)});
   if(!res.ok) throw new Error('Proxy HTTP ' + res.status);
   return await res.json();
