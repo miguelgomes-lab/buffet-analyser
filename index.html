@@ -951,12 +951,83 @@ function updateFmpStatus(){
 }
 
 // ── TABS ──
+
+// ── LIVE PRICE REFRESH (every 5s) ──
+var _livePriceInterval = null;
+
+async function refreshLivePrices(){
+  if(!portfolio.length) return;
+  // Only run when portfolio tab is visible
+  var portPage = document.getElementById('page-portfolio');
+  if(!portPage || !portPage.classList.contains('active')) return;
+
+  await Promise.all(portfolio.map(async function(s){
+    try{
+      var yPrice = await fetchYahooPrice(s.ticker);
+      if(!yPrice || !yPrice.price) return;
+
+      // Update in-memory data
+      if(!s.data) s.data = {};
+      s.data.current_price = yPrice.price;
+      s.data.yahoo_change_pct = yPrice.changePct;
+      s.data.yahoo_change = yPrice.change;
+      s.data.yahoo_market_state = yPrice.marketState;
+      s.data.yahoo_currency = yPrice.currency;
+
+      // Update DOM elements without full re-render
+      var sym = s.currency === 'EUR' ? '€' : '$';
+      var pnl = s.buyPrice ? ((yPrice.price - s.buyPrice) / s.buyPrice * 100) : null;
+      var totalVal = yPrice.price && s.qty ? yPrice.price * s.qty : null;
+      var pnlC = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted)';
+      var pnlStr = pnl != null ? (pnl > 0 ? '+' : '') + pnl.toFixed(2) + '%' : '—';
+      var priceStr = sym + yPrice.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+      var totalStr = totalVal ? sym + totalVal.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) : (s.buyPrice ? sym + s.buyPrice.toFixed(2) : '—');
+
+      // Update compact row
+      var row = document.getElementById('pc-' + s.ticker);
+      if(row){
+        var priceEl = row.querySelector('.lp-price');
+        var pnlEl = row.querySelector('.lp-pnl');
+        var totalEl = row.querySelector('.lp-total');
+        if(priceEl) priceEl.textContent = priceStr;
+        if(pnlEl){ pnlEl.textContent = pnlStr; pnlEl.style.color = pnlC; }
+        if(totalEl) totalEl.textContent = totalStr;
+      }
+
+      // Update detail panel if open
+      var panel = document.getElementById('stockDetailOverlay');
+      if(panel && panel.style.display !== 'none'){
+        var det = panel.querySelector('.lp-price-detail');
+        var detPnl = panel.querySelector('.lp-pnl-detail');
+        var detChg = panel.querySelector('.lp-change-detail');
+        if(det) det.textContent = '$' + yPrice.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        if(detPnl){ detPnl.textContent = pnlStr; detPnl.style.color = pnlC; }
+        if(detChg && yPrice.changePct != null){
+          detChg.textContent = (yPrice.changePct >= 0 ? '+' : '') + yPrice.changePct.toFixed(2) + '% hoje';
+          detChg.style.color = yPrice.changePct >= 0 ? 'var(--green)' : 'var(--red)';
+        }
+      }
+    }catch(e){}
+  }));
+}
+
+function startLivePrices(){
+  if(_livePriceInterval) clearInterval(_livePriceInterval);
+  refreshLivePrices();
+  _livePriceInterval = setInterval(refreshLivePrices, 5000);
+}
+
+function stopLivePrices(){
+  if(_livePriceInterval){ clearInterval(_livePriceInterval); _livePriceInterval = null; }
+}
+
 function goTab(t){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(x){x.classList.remove('active');});
   var page=document.getElementById('page-'+t);if(page)page.classList.add('active');
   var tab=document.getElementById('tab-'+t);if(tab)tab.classList.add('active');
-  if(t==='portfolio')renderPortfolio();
+  if(t==='portfolio'){ renderPortfolio(); startLivePrices(); }
+  else { stopLivePrices(); }
   if(t==='dashboard')refreshDashboardCharts();
 }
 
@@ -1724,12 +1795,12 @@ function buildPortCard(s){
       +'<div style="font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(d.company_name||'')+'</div>'
     +'</div>'
     +'<div style="text-align:right;flex-shrink:0;min-width:80px">'
-      +'<div style="font-size:13px;font-weight:800;color:var(--text)">'+(currentPrice ? sym+currentPrice.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—')+'</div>'
-      +'<div style="font-size:11px;font-weight:700;color:'+pnlC+';margin-top:1px">'+pnlStr+'</div>'
+      +'<div class="lp-price" style="font-size:13px;font-weight:800;color:var(--text)">'+(currentPrice ? sym+currentPrice.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—')+'</div>'
+      +'<div class="lp-pnl" style="font-size:11px;font-weight:700;color:'+pnlC+';margin-top:1px">'+pnlStr+'</div>'
     +'</div>'
     +'<div style="text-align:right;flex-shrink:0;min-width:70px">'
       +'<div style="font-size:11px;color:var(--muted)">'+(s.qty ? s.qty+' ações' : '')+'</div>'
-      +'<div style="font-size:12px;font-weight:700;color:var(--text2);margin-top:1px">'+(totalValue ? sym+totalValue.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : (s.buyPrice?sym+s.buyPrice.toFixed(2):'—'))+'</div>'
+      +'<div class="lp-total" style="font-size:12px;font-weight:700;color:var(--text2);margin-top:1px">'+(totalValue ? sym+totalValue.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : (s.buyPrice?sym+s.buyPrice.toFixed(2):'—'))+'</div>'
     +'</div>'
     +'<div style="color:var(--muted);font-size:18px;margin-left:4px;font-weight:300">›</div>'
     +'</div>';
