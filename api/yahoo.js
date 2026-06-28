@@ -1,6 +1,5 @@
 export const config = { runtime: "edge" };
 
-// Cache crumb in-memory (Edge functions can share state briefly)
 let cachedCrumb = null;
 let cachedCookie = null;
 let crumbExpiry = 0;
@@ -22,34 +21,46 @@ async function getYahooCrumb() {
   if (cachedCrumb && cachedCookie && now < crumbExpiry) {
     return { crumb: cachedCrumb, cookie: cachedCookie };
   }
-
-  // Step 1: Get Yahoo consent cookie
   const cookieRes = await fetch("https://fc.yahoo.com", {
     headers: { ...BROWSER_HEADERS, "Accept": "text/html,application/xhtml+xml,*/*" },
     redirect: "follow"
   });
   const cookieHeader = cookieRes.headers.get("set-cookie") || "";
-  // Extract A3 or other relevant cookies
   const cookie = cookieHeader.split(",").map(c => c.split(";")[0].trim()).join("; ");
-
-  // Step 2: Get crumb
   const crumbRes = await fetch("https://query1.finance.yahoo.com/v1/test/getcrumb", {
     headers: { ...BROWSER_HEADERS, "Cookie": cookie }
   });
   const crumb = await crumbRes.text();
-
   if (crumb && !crumb.includes("404") && !crumb.includes("error")) {
     cachedCrumb = crumb.trim();
     cachedCookie = cookie;
-    crumbExpiry = now + 30 * 60 * 1000; // 30 min cache
+    crumbExpiry = now + 30 * 60 * 1000;
   }
-
   return { crumb: cachedCrumb, cookie: cachedCookie };
 }
 
 export default async function handler(req) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
+  const search = searchParams.get("search");
+
+  // Yahoo Finance ticker search
+  if (search) {
+    try {
+      const searchUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(search)}&quotesCount=8&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query`;
+      const res = await fetch(searchUrl, { headers: BROWSER_HEADERS });
+      const data = await res.text();
+      return new Response(data, {
+        status: res.status,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "s-maxage=30" }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
+  }
 
   if (!url || !url.startsWith("https://query")) {
     return new Response("Bad request", { status: 400 });
@@ -59,21 +70,17 @@ export default async function handler(req) {
     let fetchUrl = url;
     let fetchHeaders = { ...BROWSER_HEADERS };
 
-    // For v10 quoteSummary (fundamentals), use crumb auth
     if (url.includes("/v10/finance/quoteSummary") || url.includes("/v1/test/getcrumb")) {
       const { crumb, cookie } = await getYahooCrumb();
       if (crumb) {
         const sep = url.includes("?") ? "&" : "?";
         fetchUrl = url + sep + "crumb=" + encodeURIComponent(crumb);
       }
-      if (cookie) {
-        fetchHeaders["Cookie"] = cookie;
-      }
+      if (cookie) fetchHeaders["Cookie"] = cookie;
     }
 
     const res = await fetch(fetchUrl, { headers: fetchHeaders });
 
-    // If 401/403, clear cache and retry once with fresh crumb
     if ((res.status === 401 || res.status === 403) && url.includes("/v10/")) {
       cachedCrumb = null; cachedCookie = null; crumbExpiry = 0;
       const { crumb, cookie } = await getYahooCrumb();
