@@ -440,7 +440,7 @@ td{padding:10px 14px;white-space:nowrap;vertical-align:middle;}
   </div>
   <div class="err-box" id="scanErr" style="display:none"></div>
 </div>
-<!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 50 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Análise automática às 09:00 · ou clica em "Analisar Agora"</div></div><button onclick="startScan()" id="dashScanBtn" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">▶ Analisar Agora</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Clica em "Analisar Agora" para iniciar a análise</div><button class="tbl-scan-btn" onclick="startScan()">Analisar Agora</button></td></tr></tbody></table></div></div></div><!-- PORTFOLIO --><!-- PORTFOLIO --><div class="page" id="page-portfolio"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;"><div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;">A Minha Carteira</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Valor intrínseco atualizado · próximos earnings · notícias e guidance</div></div><button class="btn btn-primary" onclick="refreshAll()" style="font-size:12px;padding:8px 16px">Atualizar Tudo</button></div><div class="card cp" style="margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Adicionar posição</div><div class="add-row"><div class="inp-group"><span class="inp-label">Ticker</span><input class="inp" id="nTicker" placeholder="AAPL" style="width:120px" onkeydown="if(event.key==='Enter')addStock()"/></div><div class="inp-group"><span class="inp-label">Preço Compra</span><div style="display:flex;gap:4px"><select class="inp" id="nCurrency" style="width:70px;padding:9px 6px;font-size:12px"><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select><input class="inp" id="nPrice" type="number" placeholder="0.00" style="width:100px"/></div></div><div class="inp-group"><span class="inp-label">Nº Ações</span><input class="inp" id="nQty" type="number" placeholder="10" style="width:100px"/></div><button class="add-btn" onclick="addStock()">+ Adicionar</button></div></div><div class="port-grid" id="portGrid"><div class="empty" id="portEmpty"><div class="empty-icon"></div><div class="empty-t">Carteira vazia</div><div class="empty-s">Adiciona o ticker e preço de compra acima</div></div></div></div>
+<!-- TOP OPPORTUNITIES TABLE --><div class="card" style="margin-bottom:22px;"><div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);"><div class="table-header"><div><div class="table-title">Top 50 Oportunidades de Mercado</div><div class="table-sub" id="tableLastScan">Análise automática às 09:00 · ou clica em "Analisar Agora"</div></div><button onclick="startScan()" id="dashScanBtn" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-m);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;">▶ Analisar Agora</button></div></div><div class="tbl-wrap"><table id="topTable"><thead><tr><th class="td-rank">#</th><th>Ticker</th><th>Empresa</th><th>Setor</th><th style="text-align:right">Score</th><th style="text-align:right">Preço</th><th style="text-align:right">Intrínseco</th><th style="text-align:right">Comprar a</th><th>Marg. Seg.</th><th style="text-align:right">ROE</th><th style="text-align:right">Margem</th><th style="text-align:right">P/E</th><th style="text-align:right">Div.</th><th>Moat</th><th>Rating</th></tr></thead><tbody id="topTbody"><tr><td colspan="15" class="tbl-empty"><div class="tbl-empty-icon"></div><div style="font-size:13px;color:var(--muted);font-weight:600;">Nenhum scan realizado ainda</div><div style="font-size:11px;color:var(--dim);margin-top:4px;">Clica em "Analisar Agora" para iniciar a análise</div><button class="tbl-scan-btn" onclick="startScan()">Analisar Agora</button></td></tr></tbody></table></div></div></div><!-- PORTFOLIO --><!-- PORTFOLIO --><div class="page" id="page-portfolio"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;"><div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;">A Minha Carteira</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Valor intrínseco atualizado · próximos earnings · notícias e guidance</div></div><button class="btn btn-primary" onclick="refreshAll()" style="font-size:12px;padding:8px 16px">Atualizar Tudo</button></div><div class="card cp" style="margin-bottom:20px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px">Adicionar posição</div><div class="add-row"><div class="inp-group" style="position:relative;flex:1;min-width:200px"><span class="inp-label">Empresa ou Ticker</span><input class="inp" id="nTickerSearch" placeholder="Ex: Apple, NVO, MSFT..." style="width:100%" autocomplete="off" oninput="tickerSearchInput(this.value)" onkeydown="tickerSearchKey(event)"/><input type="hidden" id="nTicker"/><div id="tickerDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;box-shadow:var(--sh2);z-index:999;max-height:260px;overflow-y:auto;margin-top:2px;"></div><div id="tickerSelected" style="display:none;margin-top:6px;padding:7px 10px;background:var(--blue-l);border:1px solid var(--blue-m);border-radius:7px;font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><span id="tickerSelectedLabel" style="font-weight:700;color:var(--blue)"></span><span onclick="clearTickerSelection()" style="cursor:pointer;color:var(--muted);font-size:13px;line-height:1">✕</span></div></div><div class="inp-group"><span class="inp-label">Preço Compra</span><div style="display:flex;gap:4px"><select class="inp" id="nCurrency" style="width:70px;padding:9px 6px;font-size:12px"><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select><input class="inp" id="nPrice" type="number" placeholder="0.00" style="width:100px"/></div></div><div class="inp-group"><span class="inp-label">Nº Ações</span><input class="inp" id="nQty" type="number" placeholder="10" style="width:100px"/></div><button class="add-btn" onclick="addStock()">+ Adicionar</button></div></div><div class="port-grid" id="portGrid"><div class="empty" id="portEmpty"><div class="empty-icon"></div><div class="empty-t">Carteira vazia</div><div class="empty-s">Adiciona o ticker e preço de compra acima</div></div></div></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1405,18 +1405,94 @@ function updateDeepChip(t,s){var pt=document.getElementById('deepTickers');if(!p
 function animFill(id,from,to,ms){var el=document.getElementById(id);if(!el)return;var start=Date.now();function tick(){var p=Math.min(1,(Date.now()-start)/ms);el.style.width=(from+(to-from)*p)+'%';if(p<1)requestAnimationFrame(tick);}requestAnimationFrame(tick);}
 
 // ── PORTFOLIO ──
+// ── TICKER SEARCH AUTOCOMPLETE ──
+var tickerSearchTimer = null;
+var tickerSearchActive = -1;
+
+async function tickerSearchInput(q){
+  clearTimeout(tickerSearchTimer);
+  var drop = document.getElementById('tickerDropdown');
+  if(!q || q.length < 1){ drop.style.display='none'; return; }
+  drop.innerHTML = '<div style="padding:10px 14px;font-size:11px;color:var(--muted)">A pesquisar...</div>';
+  drop.style.display = 'block';
+  tickerSearchTimer = setTimeout(async function(){
+    try{
+      var res = await fetch('/api/yahoo?search='+encodeURIComponent(q));
+      var data = await res.json();
+      var quotes = (data.quotes||[]).filter(function(q){ return q.symbol && (q.quoteType==='EQUITY' || q.quoteType==='ETF'); }).slice(0,8);
+      if(!quotes.length){ drop.innerHTML='<div style="padding:10px 14px;font-size:11px;color:var(--muted)">Nenhum resultado</div>'; return; }
+      tickerSearchActive = -1;
+      drop.innerHTML = quotes.map(function(q, i){
+        var exch = q.exchDisp || q.exchange || '';
+        var type = q.quoteType === 'ETF' ? ' <span style="font-size:9px;background:#f0f4ff;color:#6b84a8;padding:1px 5px;border-radius:3px;font-weight:700">ETF</span>' : '';
+        return '<div class="tsearch-item" data-idx="'+i+'" data-symbol="'+q.symbol+'" data-name="'+(q.shortname||q.longname||q.symbol)+'" data-exch="'+exch+'" onclick="selectTicker(\''+q.symbol+'\',\''+( q.shortname||q.longname||q.symbol).replace(/'/g,'`')+'\',\''+exch+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+          +'<div><div style="font-size:12px;font-weight:800;color:var(--text);font-family:JetBrains Mono,monospace">'+q.symbol+type+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px">'+(q.shortname||q.longname||'')+'</div></div>'
+          +'<div style="font-size:10px;color:var(--dim);font-weight:600;text-align:right;flex-shrink:0">'+exch+'</div>'
+          +'</div>';
+      }).join('');
+      // Hover styles
+      drop.querySelectorAll('.tsearch-item').forEach(function(el){
+        el.addEventListener('mouseenter', function(){ this.style.background='var(--bg3)'; });
+        el.addEventListener('mouseleave', function(){ this.style.background=''; });
+      });
+    }catch(e){
+      drop.innerHTML='<div style="padding:10px 14px;font-size:11px;color:var(--red)">Erro na pesquisa</div>';
+    }
+  }, 300);
+}
+
+function tickerSearchKey(e){
+  var drop = document.getElementById('tickerDropdown');
+  var items = drop.querySelectorAll('.tsearch-item');
+  if(e.key==='ArrowDown'){ e.preventDefault(); tickerSearchActive=Math.min(tickerSearchActive+1,items.length-1); items.forEach(function(el,i){el.style.background=i===tickerSearchActive?'var(--bg3)':'';});}
+  else if(e.key==='ArrowUp'){ e.preventDefault(); tickerSearchActive=Math.max(tickerSearchActive-1,0); items.forEach(function(el,i){el.style.background=i===tickerSearchActive?'var(--bg3)':'';});}
+  else if(e.key==='Enter' && tickerSearchActive>=0){ e.preventDefault(); items[tickerSearchActive].click(); }
+  else if(e.key==='Escape'){ drop.style.display='none'; }
+}
+
+function selectTicker(symbol, name, exch){
+  document.getElementById('nTicker').value = symbol;
+  document.getElementById('nTickerSearch').value = '';
+  document.getElementById('tickerDropdown').style.display = 'none';
+  var sel = document.getElementById('tickerSelected');
+  sel.style.display = 'flex';
+  document.getElementById('tickerSelectedLabel').innerHTML = '<span style="font-family:JetBrains Mono,monospace">'+symbol+'</span> <span style="font-weight:400;color:var(--text2)">· '+name+'</span> <span style="font-size:9px;color:var(--muted)">'+exch+'</span>';
+  // Auto-set currency based on exchange
+  var eurExchanges = ['ENX','EPA','AMS','ETR','BIT','BME','LSE','STO','CPH','HEL','OSL'];
+  var currEl = document.getElementById('nCurrency');
+  if(currEl && eurExchanges.some(function(ex){ return exch.toUpperCase().includes(ex); })) currEl.value='EUR';
+  else if(currEl) currEl.value='USD';
+  document.getElementById('nPrice').focus();
+}
+
+function clearTickerSelection(){
+  document.getElementById('nTicker').value = '';
+  document.getElementById('tickerSelected').style.display = 'none';
+  document.getElementById('nTickerSearch').value = '';
+  document.getElementById('nTickerSearch').focus();
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#tickerDropdown') && e.target.id!=='nTickerSearch'){
+    var drop=document.getElementById('tickerDropdown'); if(drop) drop.style.display='none';
+  }
+});
+
 function addStock(){
   var ticker=(document.getElementById('nTicker').value||'').trim().toUpperCase();
   var price=parseFloat(document.getElementById('nPrice').value)||null;
   var qty=parseInt(document.getElementById('nQty').value)||0;
   var currEl=document.getElementById('nCurrency');
   var currency=currEl?currEl.value:'USD';
-  if(!ticker){alert('Introduz um ticker.');return;}
+  if(!ticker){alert('Pesquisa e seleciona uma empresa primeiro.');return;}
   if(portfolio.find(function(s){return s.ticker===ticker;})){alert(ticker+' ja esta na carteira.');return;}
   var stock={ticker:ticker,buyPrice:price,currency:currency,qty:qty,addedAt:new Date().toISOString(),data:null,lastUpdated:null};
   portfolio.push(stock);
   LS.s(K.port,portfolio);
   document.getElementById('nTicker').value='';
+  document.getElementById('nTickerSearch').value='';
+  document.getElementById('tickerSelected').style.display='none';
   document.getElementById('nPrice').value='';
   document.getElementById('nQty').value='';
   // Add card directly
