@@ -678,6 +678,7 @@ async function saveMethodSettings(){
   setTimeout(function(){ closeSettingsModal(); }, 900);
 }
 
+function switchSettingsTab(tab){
   ['api','method','tickers'].forEach(function(t){
     var btn = document.getElementById('stab-'+t);
     var content = document.getElementById('stab-content-'+t);
@@ -699,8 +700,6 @@ function loadTickersTab(){
 }
 
 
-
-async 
 
 async function saveTickerSettings(){
   var raw = document.getElementById('cfg-tickers').value;
@@ -1875,7 +1874,6 @@ function closeStockDetail(){
     +'</div></div>';
 }
 
-// ── BUFFETT SCORE — calculated locally, transparent weights ──
 // ── BUFFETT SCORE — driven by user metric configuration ──
 function calcBuffettScore(fund, dcf, price){
   if(!fund) return {score:0, breakdown:[]};
