@@ -1541,7 +1541,7 @@ async function tickerSearchInput(q){
           +'<span style="display:none;font-size:11px;font-weight:800;color:var(--blue);font-family:JetBrains Mono,monospace">'+initials+'</span>'
           +'</div>';
         var name = q.shortname||q.longname||q.symbol;
-        return '<div class="tsearch-item" data-idx="'+i+'" data-symbol="'+q.symbol+'" data-name="'+name+'" data-exch="'+exch+'" data-logo="'+logoUrl+'" onclick="selectTicker(\''+q.symbol+'\',\''+name.replace(/'/g,'`')+'\',\''+exch+'\',\''+logoUrl+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
+        return '<div class="tsearch-item" data-idx="'+i+'" data-symbol="'+q.symbol+'" data-name="'+name+'" data-exch="'+exch+'" data-logo="'+logoUrl+'" onclick="selectTicker(\''+q.symbol+'\',\''+name.replace(/'/g,'\u2019')+'\',\''+exch+'\',\''+logoUrl+'\')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">'
           +logoHtml
           +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:800;color:var(--text);font-family:JetBrains Mono,monospace">'+q.symbol+type+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+'</div></div>'
           +'<div style="font-size:10px;color:var(--dim);font-weight:600;text-align:right;flex-shrink:0">'+exch+'</div>'
